@@ -2,8 +2,6 @@ package dev.rmaiun;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class Example {
@@ -14,10 +12,12 @@ public class Example {
     // CompletableFuture.completedFuture()
     // CompletableFuture<String> cf = new CompletableFuture<>();
     // cf.thenApply()
-    SagaAction<String> action = () -> generateString(4);
-    SagaCompensation compensation = () -> removeString("****");
-    Saga<String> saga1 = Saga.action(() -> generateString(4)).compensate(() -> removeString("****"));
-    Sagas.saga(saga1).then(x -> () -> removeString(x))
+    Saga<Integer> hello = Sagas.step(() -> generateString(4), x -> () -> removeString(x))
+        .flatmap(z -> Sagas.step(() -> writeSomething("Hello"), x -> () -> cleanText(x)))
+        .map(String::length);
+
+    System.out.println(hello);
+
   }
 
   static String generateString(int qty) {
@@ -31,5 +31,14 @@ public class Example {
 
   static void removeString(String str) {
     data.removeIf(x -> x.equals(str));
+  }
+
+  static String writeSomething(String text) {
+    System.out.println(text);
+    return text;
+  }
+
+  static void cleanText(String text) {
+    System.out.printf("Clean %s \n", text);
   }
 }

@@ -1,26 +1,23 @@
 package dev.rmaiun;
 
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 
-public class SagaStep<A, B> {
+public class SagaStep<A> extends Saga<A> {
 
-  private Saga<A> current;
-  private Saga<B> prev;
+  private Callable<A> action;
+  private Function<A, Runnable> compensator;
 
-  public SagaStep(Saga<A> current, Saga<B> prev) {
-    this.current = current;
-    this.prev = prev;
+  public SagaStep(Callable<A> action, Function<A, Runnable> compensator) {
+    this.action = action;
+    this.compensator = compensator;
   }
 
-  public Saga<A> getCurrent() {
-    return current;
+  public Callable<A> getAction() {
+    return action;
   }
 
-  public Saga<B> getPrev() {
-    return prev;
-  }
-
-  public SagaStep<A,B> then(Function<A,Saga<B>> f) {
-
+  public Function<A, Runnable> getCompensator() {
+    return compensator;
   }
 }

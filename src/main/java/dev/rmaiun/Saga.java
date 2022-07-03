@@ -1,46 +1,14 @@
 package dev.rmaiun;
 
-public class Saga<A> implements SagaAction<A>, SagaCompensation {
+import java.util.function.Function;
 
-  private SagaAction<A> sagaAction;
-  private SagaCompensation compensation;
+public abstract class Saga<A> {
 
-  public SagaAction<A> getSagaAction() {
-    return sagaAction;
+  public <B> Saga<B> map(Function<A, B> f) {
+    return flatmap(a -> Sagas.success(f.apply(a)));
   }
 
-  public void setSagaAction(SagaAction<A> sagaAction) {
-    this.sagaAction = sagaAction;
-  }
-
-  public SagaCompensation getCompensation() {
-    return compensation;
-  }
-
-  public void setCompensation(SagaCompensation compensation) {
-    this.compensation = compensation;
-  }
-
-  public static <A> Saga<A> action(SagaAction<A> action) {
-    Saga<A> saga = new Saga<>();
-    saga.setSagaAction(action);
-    return saga;
-  }
-
-  public Saga<A> compensate(SagaCompensation compensationAction) {
-    Saga<A> saga = new Saga<>();
-    saga.setSagaAction(this.getSagaAction());
-    saga.setCompensation(compensationAction);
-    return saga;
-  }
-
-  @Override
-  public A action() {
-    return sagaAction.action();
-  }
-
-  @Override
-  public void compensate() {
-    compensation.compensate();
+  public <B> Saga<B> flatmap(Function<A, Saga<B>> f) {
+    return Sagas.flatMap(this, f);
   }
 }
