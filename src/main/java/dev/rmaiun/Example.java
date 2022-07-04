@@ -9,15 +9,14 @@ public class Example {
   static List<String> data = new ArrayList<>();
 
   public static void main(String[] args) {
-    // CompletableFuture.completedFuture()
-    // CompletableFuture<String> cf = new CompletableFuture<>();
-    // cf.thenApply()
-    Saga<Integer> hello = Sagas.step(() -> generateString(4), x -> () -> removeString(x))
-        .flatmap(z -> Sagas.step(() -> writeSomething("Hello"), x -> () -> cleanText(x)))
+    Saga<Integer> hello = Sagas.step(() -> generateString(4), () -> removeString("****"))
+        .flatmap(z -> Sagas.step(() -> writeSomething("Hello"), () -> cleanText("Hello")))
         .map(String::length);
 
     System.out.println(hello);
+    Integer bla = new SagaManager().saga(hello).withName("bla").transact();
 
+    System.out.println(bla);
   }
 
   static String generateString(int qty) {

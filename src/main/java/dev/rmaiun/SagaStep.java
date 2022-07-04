@@ -6,9 +6,9 @@ import java.util.function.Function;
 public class SagaStep<A> extends Saga<A> {
 
   private Callable<A> action;
-  private Function<A, Runnable> compensator;
+  private Runnable compensator;
 
-  public SagaStep(Callable<A> action, Function<A, Runnable> compensator) {
+  public SagaStep(Callable<A> action, Runnable compensator) {
     this.action = action;
     this.compensator = compensator;
   }
@@ -17,7 +17,7 @@ public class SagaStep<A> extends Saga<A> {
     return action;
   }
 
-  public Function<A, Runnable> getCompensator() {
+  public Runnable getCompensator() {
     return compensator;
   }
 }
