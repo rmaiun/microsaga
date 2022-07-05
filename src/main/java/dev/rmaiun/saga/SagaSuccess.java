@@ -1,4 +1,4 @@
-package dev.rmaiun;
+package dev.rmaiun.saga;
 
 public class SagaSuccess<T> extends Saga<T> {
 

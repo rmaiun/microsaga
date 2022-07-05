@@ -1,4 +1,4 @@
-package dev.rmaiun;
+package dev.rmaiun.saga;
 
 import java.util.function.Function;
 

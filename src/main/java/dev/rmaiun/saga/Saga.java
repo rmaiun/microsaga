@@ -1,5 +1,6 @@
-package dev.rmaiun;
+package dev.rmaiun.saga;
 
+import dev.rmaiun.Sagas;
 import java.util.function.Function;
 
 public abstract class Saga<A> {

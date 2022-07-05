@@ -1,5 +1,8 @@
 package dev.rmaiun;
 
+import dev.rmaiun.component.SagaManager;
+import dev.rmaiun.saga.Saga;
+import dev.rmaiun.saga.SagaStep;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -9,8 +12,12 @@ public class Example {
   static List<String> data = new ArrayList<>();
 
   public static void main(String[] args) {
-    Saga<Integer> hello = Sagas.step("generateString", () -> generateString(4), () -> removeString("****"))
-        .flatmap(z -> Sagas.step("writeSomething", () -> writeSomething("Hello"), () -> cleanText("Hello")))
+    Saga<String> generateStringStep = Sagas.action("generateString", () -> generateString(4))
+        .compensate(Sagas.compensation("removeString", () -> removeString("****")));
+    SagaStep<String> writeSomething = Sagas.action("writeSomething", () -> writeSomething("Hello"))
+        .compensate(Sagas.compensation("cleanText", () -> cleanText("Hello")));
+
+    Saga<Integer> hello = generateStringStep.flatmap(x -> writeSomething)
         .map(String::length);
 
     System.out.println(hello);

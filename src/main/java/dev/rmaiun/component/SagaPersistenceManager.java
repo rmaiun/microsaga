@@ -1,4 +1,4 @@
-package dev.rmaiun;
+package dev.rmaiun.component;
 
 import java.util.ArrayList;
 import java.util.List;
