@@ -41,14 +41,14 @@ public class SagaTransactor {
     } else if (saga instanceof SagaStep) {
       SagaStep<X> sagaStep = (SagaStep<X>) saga;
       Callable<X> action = sagaStep.getAction().getAction();
-      System.out.printf("Evaluating action ---> %s%n \n", sagaStep.getAction().getName());
+      System.out.printf("Evaluating action ---> %s%n", sagaStep.getAction().getName());
       compensations.add(sagaStep.getCompensator());
       try {
         return EvaluationResult.success(action.call());
       } catch (Throwable t) {
         while (!compensations.empty()) {
           SagaCompensation pop = compensations.pop();
-          System.out.printf("Evaluating compensation <--- %s \n", pop.getName());
+          System.out.printf("Evaluating compensation <--- %s", pop.getName());
           pop.getCompensation().run();
         }
         return EvaluationResult.actionFailed(t);
@@ -61,9 +61,10 @@ public class SagaTransactor {
       EvaluationResult<Y> runA = run(sagaFlatMap.getA(), compensations);
       return runA.isSuccess()
           ? run(sagaFlatMap.getfB().apply(runA.getValue()), compensations)
-          : null;
+          // todo: rethink null concept
+          : EvaluationResult.success(null);
     } else {
-      return null;
+      return EvaluationResult.actionFailed(new IllegalArgumentException("Could not define Saga Operation"));
     }
   }
 
