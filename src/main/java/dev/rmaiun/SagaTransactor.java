@@ -7,11 +7,10 @@ public class SagaTransactor {
 
 
   public <A> A transact(Saga<A> saga) {
-    return run(saga);
+    return run(saga, new Stack<>());
   }
 
-  public <X, Y> X run(Saga<X> saga) {
-    Stack<Runnable> compensations = new Stack<>();
+  public <X, Y> X run(Saga<X> saga, Stack<Runnable> compensations) {
     if (saga instanceof SagaSuccess) {
       return ((SagaSuccess<X>) saga).getValue();
     } else if (saga instanceof SagaStep) {
@@ -28,8 +27,8 @@ public class SagaTransactor {
       }
     } else if (saga instanceof SagaFlatMap) {
       SagaFlatMap<Y, X> sagaFlatMap = (SagaFlatMap<Y, X>) saga;
-      Y runA = run(sagaFlatMap.getA());
-      return run(sagaFlatMap.getfB().apply(runA));
+      Y runA = run(sagaFlatMap.getA(), compensations);
+      return run(runA == null ? null : sagaFlatMap.getfB().apply(runA), compensations);
     } else {
       return null;
     }

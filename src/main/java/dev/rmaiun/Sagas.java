@@ -8,8 +8,8 @@ public class Sagas {
   private Sagas() {
   }
 
-  public static <A> Saga<A> step(Callable<A> action, Runnable compensator) {
-    return new SagaStep<>(action, compensator);
+  public static <A> Saga<A> step(String name, Callable<A> action, Runnable compensator) {
+    return new SagaStep<>(name, action, compensator);
   }
 
   public static <A> Saga<A> success(A value) {
