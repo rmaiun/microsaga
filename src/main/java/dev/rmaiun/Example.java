@@ -17,11 +17,11 @@ public class Example {
     SagaStep<String> writeSomething = Sagas.action("writeSomething", () -> writeSomething("Hello"))
         .compensate(Sagas.compensation("cleanText", () -> cleanText("Hello")));
 
-    Saga<Integer> hello = generateStringStep.flatmap(x -> writeSomething)
+    Saga<Integer> hello = generateStringStep.then(writeSomething)
         .map(String::length);
 
     System.out.println(hello);
-    Integer bla = new SagaManager().saga(hello).withName("bla").transact();
+    Integer bla = new SagaManager().saga(hello).withName("bla").transactOrThrow();
 
     System.out.println(bla);
   }

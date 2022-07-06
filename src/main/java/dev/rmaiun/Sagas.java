@@ -26,10 +26,6 @@ public class Sagas {
     return new SagaSuccess<>(value);
   }
 
-  public static <A> Saga<A> failed(Throwable cause) {
-    return new SagaFailed<>(cause);
-  }
-
   public static <A, B> Saga<B> flatMap(Saga<A> a, Function<A, Saga<B>> fB) {
     return new SagaFlatMap<>(a, fB);
   }

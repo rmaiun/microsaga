@@ -4,8 +4,9 @@ import dev.rmaiun.component.SagaPersistenceManager;
 import dev.rmaiun.component.SagaTransactor;
 import dev.rmaiun.saga.Saga;
 import java.util.UUID;
+import java.util.function.Function;
 
-public class SagaTransactionCtx<A> {
+public class SagaRunner<A> {
 
   private String name = UUID.randomUUID().toString().replace("-", "");
   private Saga<A> saga;
@@ -13,11 +14,19 @@ public class SagaTransactionCtx<A> {
 
 
   public A transact() {
-    return new SagaTransactor().transact(saga);
+    return new SagaTransactor().transact(name, saga);
+  }
+
+  public A transactOrThrow() {
+    return new SagaTransactor().transactOrThrow(name, saga);
+  }
+
+  public <E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
+    return new SagaTransactor().transactOrThrow(name, saga, errorTransformer);
   }
 
 
-  public SagaTransactionCtx<A> withName(String name) {
+  public SagaRunner<A> withName(String name) {
     this.name = name;
     return this;
   }

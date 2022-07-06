@@ -3,25 +3,23 @@ package dev.rmaiun.support;
 public class EvaluationResult<A> {
 
   private final A value;
-  private final Throwable error;
-  private final boolean compensationFailed;
+  private final RuntimeException error;
 
   public static <X> EvaluationResult<X> success(X data) {
-    return new EvaluationResult<>(data, null, false);
+    return new EvaluationResult<>(data, null);
   }
 
-  public static <X> EvaluationResult<X> actionFailed(Throwable t) {
-    return new EvaluationResult<>(null, t, false);
+  public static <X> EvaluationResult<X> failed(RuntimeException t) {
+    return new EvaluationResult<>(null, t);
   }
 
-  public static <X> EvaluationResult<X> compensationFailed(Throwable t) {
-    return new EvaluationResult<>(null, t, true);
+  public static <X> EvaluationResult<X> compensationFailed(RuntimeException t) {
+    return new EvaluationResult<>(null, t);
   }
 
-  public EvaluationResult(A value, Throwable error, boolean compensationFailed) {
+  public EvaluationResult(A value, RuntimeException error) {
     this.value = value;
     this.error = error;
-    this.compensationFailed = compensationFailed;
   }
 
   public boolean isError() {
@@ -36,7 +34,7 @@ public class EvaluationResult<A> {
     return value;
   }
 
-  public Throwable getError() {
+  public RuntimeException getError() {
     return error;
   }
 }

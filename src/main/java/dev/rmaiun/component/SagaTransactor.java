@@ -1,7 +1,8 @@
 package dev.rmaiun.component;
 
+import dev.rmaiun.exception.SagaActionFailedException;
+import dev.rmaiun.exception.SagaCompensationFailedException;
 import dev.rmaiun.saga.Saga;
-import dev.rmaiun.saga.SagaFailed;
 import dev.rmaiun.saga.SagaFlatMap;
 import dev.rmaiun.saga.SagaStep;
 import dev.rmaiun.saga.SagaSuccess;
@@ -14,20 +15,20 @@ import java.util.function.Function;
 public class SagaTransactor {
 
 
-  public <A> A transact(Saga<A> saga) {
-    return run(saga, new Stack<>()).getValue();
+  public <A> A transact(String sagaName, Saga<A> saga) {
+    return run(sagaName, saga, new Stack<>()).getValue();
   }
 
-  public <A> A transactOrThrow(Saga<A> saga) {
-    EvaluationResult<A> result = run(saga, new Stack<>());
+  public <A> A transactOrThrow(String sagaName, Saga<A> saga) {
+    EvaluationResult<A> result = run(sagaName, saga, new Stack<>());
     if (result.isError()) {
-      throw new RuntimeException(result.getError());
+      throw result.getError();
     }
     return result.getValue();
   }
 
-  public <A, E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    EvaluationResult<A> result = run(saga, new Stack<>());
+  public <A, E extends RuntimeException> A transactOrThrow(String sagaName, Saga<A> saga, Function<Throwable, E> errorTransformer) {
+    EvaluationResult<A> result = run(sagaName, saga, new Stack<>());
     if (result.isError()) {
       Throwable error = result.getError();
       throw errorTransformer.apply(error);
@@ -35,7 +36,7 @@ public class SagaTransactor {
     return result.getValue();
   }
 
-  public <X, Y> EvaluationResult<X> run(Saga<X> saga, Stack<SagaCompensation> compensations) {
+  public <X, Y> EvaluationResult<X> run(String sagaName, Saga<X> saga, Stack<SagaCompensation> compensations) {
     if (saga instanceof SagaSuccess) {
       return EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
     } else if (saga instanceof SagaStep) {
@@ -45,26 +46,26 @@ public class SagaTransactor {
       compensations.add(sagaStep.getCompensator());
       try {
         return EvaluationResult.success(action.call());
-      } catch (Throwable t) {
-        while (!compensations.empty()) {
-          SagaCompensation pop = compensations.pop();
-          System.out.printf("Evaluating compensation <--- %s", pop.getName());
-          pop.getCompensation().run();
+      } catch (Throwable ta) {
+        try {
+          while (!compensations.empty()) {
+            SagaCompensation pop = compensations.pop();
+            System.out.printf("Evaluating compensation <--- %s%n", pop.getName());
+            pop.getCompensation().run();
+          }
+        } catch (Throwable tc) {
+          return EvaluationResult.failed(new SagaCompensationFailedException(sagaStep.getAction().getName(), sagaName, tc));
         }
-        return EvaluationResult.actionFailed(t);
+        return EvaluationResult.failed(new SagaActionFailedException(sagaStep.getAction().getName(), sagaName, ta));
       }
-    } else if (saga instanceof SagaFailed) {
-      SagaFailed<X> sagaFailed = (SagaFailed<X>) saga;
-      return EvaluationResult.actionFailed(sagaFailed.getCause());
     } else if (saga instanceof SagaFlatMap) {
       SagaFlatMap<Y, X> sagaFlatMap = (SagaFlatMap<Y, X>) saga;
-      EvaluationResult<Y> runA = run(sagaFlatMap.getA(), compensations);
+      EvaluationResult<Y> runA = run(sagaName, sagaFlatMap.getA(), compensations);
       return runA.isSuccess()
-          ? run(sagaFlatMap.getfB().apply(runA.getValue()), compensations)
-          // todo: rethink null concept
-          : EvaluationResult.success(null);
+          ? run(sagaName, sagaFlatMap.getfB().apply(runA.getValue()), compensations)
+          : EvaluationResult.failed(runA.getError());
     } else {
-      return EvaluationResult.actionFailed(new IllegalArgumentException("Could not define Saga Operation"));
+      return EvaluationResult.failed(new IllegalArgumentException("Could not define Saga Operation"));
     }
   }
 
