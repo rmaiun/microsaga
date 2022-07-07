@@ -6,6 +6,7 @@ import dev.rmaiun.saga.SagaStep;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
+import net.jodah.failsafe.RetryPolicy;
 
 public class Example {
 
@@ -13,7 +14,7 @@ public class Example {
 
   public static void main(String[] args) {
     Saga<String> generateStringStep = Sagas.action("generateString", () -> generateString(4))
-        .compensate(Sagas.compensation("removeString", () -> removeString("****")));
+        .compensate(Sagas.retryableCompensation("removeString", () -> removeString("****"),new RetryPolicy<>().withMaxRetries(3)));
     SagaStep<String> writeSomething = Sagas.action("writeSomething", () -> writeSomething("Hello"))
         .compensate(Sagas.compensation("cleanText", () -> cleanText("Hello")));
 
@@ -38,7 +39,8 @@ public class Example {
 
   static void removeString(String str) {
     System.out.println("Call 'removeString()'");
-    data.removeIf(x -> x.equals(str));
+    throw new RuntimeException("Problem with string removal");
+    // data.removeIf(x -> x.equals(str));
   }
 
   static String writeSomething(String text) {

@@ -11,6 +11,8 @@ import dev.rmaiun.support.SagaCompensation;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.function.CheckedRunnable;
 
 public class SagaTransactor {
 
@@ -51,7 +53,7 @@ public class SagaTransactor {
           while (!compensations.empty()) {
             SagaCompensation pop = compensations.pop();
             System.out.printf("Evaluating compensation <--- %s%n", pop.getName());
-            pop.getCompensation().run();
+            Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
           }
         } catch (Throwable tc) {
           return EvaluationResult.failed(new SagaCompensationFailedException(sagaStep.getAction().getName(), sagaName, tc));
