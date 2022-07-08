@@ -12,17 +12,15 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.function.CheckedRunnable;
 
 public class SagaTransactor {
 
-
   public <A> A transact(String sagaName, Saga<A> saga) {
-    return run(sagaName, saga, new Stack<>()).getValue();
+    return runLogged(sagaName, saga).getValue();
   }
 
   public <A> A transactOrThrow(String sagaName, Saga<A> saga) {
-    EvaluationResult<A> result = run(sagaName, saga, new Stack<>());
+    EvaluationResult<A> result = runLogged(sagaName, saga);
     if (result.isError()) {
       throw result.getError();
     }
@@ -30,7 +28,7 @@ public class SagaTransactor {
   }
 
   public <A, E extends RuntimeException> A transactOrThrow(String sagaName, Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    EvaluationResult<A> result = run(sagaName, saga, new Stack<>());
+    EvaluationResult<A> result = runLogged(sagaName, saga);
     if (result.isError()) {
       Throwable error = result.getError();
       throw errorTransformer.apply(error);
@@ -38,22 +36,34 @@ public class SagaTransactor {
     return result.getValue();
   }
 
-  public <X, Y> EvaluationResult<X> run(String sagaName, Saga<X> saga, Stack<SagaCompensation> compensations) {
+  private <X> EvaluationResult<X> runLogged(String sagaName, Saga<X> saga) {
+    StringBuilder sb = new StringBuilder();
+    EvaluationResult<X> result = run(sagaName, saga, new Stack<>(), sb);
+    System.out.println(sb);
+    return result;
+  }
+
+  public <X, Y> EvaluationResult<X> run(String sagaName, Saga<X> saga, Stack<SagaCompensation> compensations, StringBuilder sb) {
     if (saga instanceof SagaSuccess) {
       return EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
     } else if (saga instanceof SagaStep) {
       SagaStep<X> sagaStep = (SagaStep<X>) saga;
       Callable<X> action = sagaStep.getAction().getAction();
-      System.out.printf("Evaluating action ---> %s%n", sagaStep.getAction().getName());
       compensations.add(sagaStep.getCompensator());
       try {
-        return EvaluationResult.success(action.call());
+        long actionStart = System.currentTimeMillis();
+        X callResult = action.call();
+        long actionEnd = System.currentTimeMillis();
+        sb.append(String.format("Evaluating action ---> %s (%d ms) %n", sagaStep.getAction().getName(), actionEnd - actionStart));
+        return EvaluationResult.success(callResult);
       } catch (Throwable ta) {
         try {
           while (!compensations.empty()) {
             SagaCompensation pop = compensations.pop();
-            System.out.printf("Evaluating compensation <--- %s%n", pop.getName());
+            long compensationStart = System.currentTimeMillis();
             Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
+            long compensationEnd = System.currentTimeMillis();
+            sb.append(String.format("Evaluating compensation ---> %s (%d ms) %n", sagaStep.getAction().getName(), compensationEnd - compensationStart));
           }
         } catch (Throwable tc) {
           return EvaluationResult.failed(new SagaCompensationFailedException(sagaStep.getAction().getName(), sagaName, tc));
@@ -62,13 +72,12 @@ public class SagaTransactor {
       }
     } else if (saga instanceof SagaFlatMap) {
       SagaFlatMap<Y, X> sagaFlatMap = (SagaFlatMap<Y, X>) saga;
-      EvaluationResult<Y> runA = run(sagaName, sagaFlatMap.getA(), compensations);
+      EvaluationResult<Y> runA = run(sagaName, sagaFlatMap.getA(), compensations, sb);
       return runA.isSuccess()
-          ? run(sagaName, sagaFlatMap.getfB().apply(runA.getValue()), compensations)
+          ? run(sagaName, sagaFlatMap.getfB().apply(runA.getValue()), compensations, sb)
           : EvaluationResult.failed(runA.getError());
     } else {
-      return EvaluationResult.failed(new IllegalArgumentException("Could not define Saga Operation"));
+      return EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
     }
   }
-
 }
