@@ -5,6 +5,7 @@ import dev.rmaiun.saga.Saga;
 import dev.rmaiun.saga.SagaStep;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.logging.log4j.LogManager;
@@ -16,6 +17,7 @@ public class Example {
   static List<String> data = new ArrayList<>();
 
   public static void main(String[] args) {
+    System.out.println("hello");
     LOG.info("Hello");
     Saga<String> generateStringStep = Sagas.action("generateString", () -> generateString(4))
         .compensate(Sagas.retryableCompensation("removeString", () -> removeString("****"), new RetryPolicy<>().withMaxRetries(3)));
@@ -25,7 +27,7 @@ public class Example {
     Saga<Integer> hello = generateStringStep.then(writeSomething)
         .map(String::length);
 
-    Integer bla = new SagaManager().saga(hello).withName("bla").transactOrThrow();
+    Integer bla = new SagaManager().saga(hello).withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", ""))).transactOrThrow();
   }
 
   static String generateString(int qty) {
