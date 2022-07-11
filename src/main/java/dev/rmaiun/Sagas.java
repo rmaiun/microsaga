@@ -15,12 +15,17 @@ public class Sagas {
   }
 
   public static <A> SagaAction<A> action(String name, Callable<A> action) {
-    return new SagaAction<>(name, action);
+    return new SagaAction<>(name, action, new RetryPolicy<A>().withMaxRetries(0));
+  }
+
+  public static <A> SagaAction<A> retryableAction(String name, Callable<A> action, RetryPolicy<A> retryPolicy) {
+    return new SagaAction<>(name, action, retryPolicy);
   }
 
   public static SagaCompensation compensation(String name, Runnable compensator) {
     return new SagaCompensation(name, compensator, new RetryPolicy<>().withMaxRetries(0));
   }
+
   public static SagaCompensation retryableCompensation(String name, Runnable compensator, RetryPolicy<Object> retryPolicy) {
     return new SagaCompensation(name, compensator, retryPolicy);
   }

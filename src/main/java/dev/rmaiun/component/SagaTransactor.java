@@ -47,14 +47,16 @@ public class SagaTransactor {
   private <X> EvaluationResult<X> runLogged(String sagaName, Saga<X> saga) {
     List<LogVal> logVals = new ArrayList<>();
     EvaluationResult<X> result = run(sagaName, saga, new Stack<>(), logVals);
-    StringBuilder sb = new StringBuilder(System.lineSeparator()).append(String.format("-----%s-----%n", sagaName));
+    StringBuilder sb = new StringBuilder(System.lineSeparator())
+        .append(String.format("------------------------------------------------------------%n"))
+        .append(String.format("sagaName = %s%n", sagaName));
     String logResult = logVals.stream()
         .map(lv -> String.format("[%s] %s %d(ms)", lv.getType(), lv.getName(), lv.getMs()))
         .collect(Collectors.joining(System.lineSeparator()));
     sb.append(logResult)
         .append(System.lineSeparator())
-        .append(String.format("----------%n"));
-    LOG.warn(sb.toString());
+        .append(String.format("------------------------------------------------------------%n"));
+    LOG.info(sb.toString());
     return result;
   }
 
@@ -67,7 +69,7 @@ public class SagaTransactor {
       compensations.add(sagaStep.getCompensator());
       long actionStart = System.currentTimeMillis();
       try {
-        X callResult = action.call();
+        X callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
         logVals.add(LogVal.action(sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart));
         return EvaluationResult.success(callResult);
       } catch (Throwable ta) {
