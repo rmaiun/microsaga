@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,8 +29,13 @@ public class Example {
     Saga<Integer> hello = generateStringStep.then(writeSomething)
         .map(String::length);
 
-    Integer bla = new SagaManager().saga(hello).withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", ""))).transactOrThrow();
-    Integer bla2 = new SagaManager().saga(hello).withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", ""))).transactOrThrow();
+    Integer bla = new SagaManager().saga(hello)
+        .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
+        .withLoggingLvl(Level.DEBUG)
+        .transactOrThrow();
+    Integer bla2 = new SagaManager().saga(hello)
+        .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
+        .transactOrThrow();
   }
 
   static String generateString(int qty) {

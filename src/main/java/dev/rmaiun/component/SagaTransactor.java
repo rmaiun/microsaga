@@ -12,15 +12,23 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import net.jodah.failsafe.Failsafe;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class SagaTransactor {
 
-  private static final Logger LOG = LogManager.getLogger(SagaTransactor.class);
+  private final Level loggingLvl;
 
   public <A> A transact(String sagaName, Saga<A> saga) {
     return run(sagaName, saga, new Stack<>()).getValue();
+  }
+
+  public SagaTransactor(Level loggingLvl) {
+    if (loggingLvl == null) {
+      this.loggingLvl = Level.INFO;
+    } else {
+      this.loggingLvl = loggingLvl;
+    }
   }
 
   public <A> A transactOrThrow(String sagaName, Saga<A> saga) {
@@ -49,31 +57,7 @@ public class SagaTransactor {
       return EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
     } else if (saga instanceof SagaStep) {
       SagaStep<X> sagaStep = (SagaStep<X>) saga;
-      Callable<X> action = sagaStep.getAction().getAction();
-      compensations.add(sagaStep.getCompensator());
-      long actionStart = System.currentTimeMillis();
-      try {
-        X callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
-        LOG.info("SAGA:{} [action] {} {}(ms)", sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart);
-        return EvaluationResult.success(callResult);
-      } catch (Throwable ta) {
-        LOG.info("SAGA:{} [action] {} {}(ms)", sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart);
-        long compensationStart = System.currentTimeMillis();
-        String compensation = null;
-        try {
-          while (!compensations.empty()) {
-            SagaCompensation pop = compensations.pop();
-            compensationStart = System.currentTimeMillis();
-            compensation = pop.getName();
-            Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
-            LOG.info("SAGA:{} [compensation] {} {}(ms)", sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - compensationStart);
-          }
-        } catch (Throwable tc) {
-          LOG.info("SAGA:{} [compensation] {} {}(ms)", sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - compensationStart);
-          return EvaluationResult.failed(new SagaCompensationFailedException(compensation, sagaName, tc));
-        }
-        return EvaluationResult.failed(new SagaActionFailedException(sagaStep.getAction().getName(), sagaName, ta));
-      }
+      return evaluateStep(sagaName, sagaStep, compensations);
     } else if (saga instanceof SagaFlatMap) {
       SagaFlatMap<Y, X> sagaFlatMap = (SagaFlatMap<Y, X>) saga;
       EvaluationResult<Y> runA = run(sagaName, sagaFlatMap.getA(), compensations);
@@ -83,5 +67,45 @@ public class SagaTransactor {
     } else {
       return EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
     }
+  }
+
+  private <X> EvaluationResult<X> evaluateStep(String sagaName, SagaStep<X> sagaStep, Stack<SagaCompensation> compensations) {
+    Callable<X> action = sagaStep.getAction().getAction();
+    compensations.add(sagaStep.getCompensator());
+    long actionStart = System.currentTimeMillis();
+    try {
+      X callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
+      logAction(sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart);
+      return EvaluationResult.success(callResult);
+    } catch (Throwable ta) {
+      logAction(sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart);
+      long compensationStart = System.currentTimeMillis();
+      String compensation = null;
+      try {
+        while (!compensations.empty()) {
+          SagaCompensation pop = compensations.pop();
+          compensationStart = System.currentTimeMillis();
+          compensation = pop.getName();
+          Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
+          logCompensation(sagaName, compensation, System.currentTimeMillis() - compensationStart);
+        }
+      } catch (Throwable tc) {
+        logCompensation(sagaName, compensation, System.currentTimeMillis() - compensationStart);
+        return EvaluationResult.failed(new SagaCompensationFailedException(compensation, sagaName, tc));
+      }
+      return EvaluationResult.failed(new SagaActionFailedException(sagaStep.getAction().getName(), sagaName, ta));
+    }
+  }
+
+  private void logCompensation(String sagaName, String compensationName, long msDiff) {
+    log(sagaName, "compensation", compensationName, msDiff);
+  }
+
+  private void logAction(String sagaName, String compensationName, long msDiff) {
+    log(sagaName, "action", compensationName, msDiff);
+  }
+
+  private void log(String sagaName, String type, String compensationName, long msDiff) {
+    LogManager.getContext().getLogger(SagaTransactor.class).log(loggingLvl, "SAGA:{} [{}] {} {}(ms)", sagaName, type, compensationName, msDiff);
   }
 }

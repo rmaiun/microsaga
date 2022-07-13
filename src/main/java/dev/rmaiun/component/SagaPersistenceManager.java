@@ -10,6 +10,5 @@ public class SagaPersistenceManager {
     return new ArrayList<>();
   }
 
-  ;
 
 }

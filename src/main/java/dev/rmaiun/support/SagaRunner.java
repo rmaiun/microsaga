@@ -1,28 +1,27 @@
 package dev.rmaiun.support;
 
-import dev.rmaiun.component.SagaPersistenceManager;
 import dev.rmaiun.component.SagaTransactor;
 import dev.rmaiun.saga.Saga;
 import java.util.UUID;
 import java.util.function.Function;
+import org.apache.logging.log4j.Level;
 
 public class SagaRunner<A> {
 
   private String name = UUID.randomUUID().toString().replace("-", "");
   private Saga<A> saga;
-  private SagaPersistenceManager spm;
-
+  private Level loggingLvl;
 
   public A transact() {
-    return new SagaTransactor().transact(name, saga);
+    return new SagaTransactor(loggingLvl).transact(name, saga);
   }
 
   public A transactOrThrow() {
-    return new SagaTransactor().transactOrThrow(name, saga);
+    return new SagaTransactor(loggingLvl).transactOrThrow(name, saga);
   }
 
   public <E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    return new SagaTransactor().transactOrThrow(name, saga, errorTransformer);
+    return new SagaTransactor(loggingLvl).transactOrThrow(name, saga, errorTransformer);
   }
 
 
@@ -31,13 +30,11 @@ public class SagaRunner<A> {
     return this;
   }
 
-  public SagaPersistenceManager getSpm() {
-    return spm;
+  public SagaRunner<A> withLoggingLvl(Level lvl) {
+    this.loggingLvl = lvl;
+    return this;
   }
 
-  public void setSpm(SagaPersistenceManager spm) {
-    this.spm = spm;
-  }
 
   public String getName() {
     return name;
@@ -55,4 +52,11 @@ public class SagaRunner<A> {
     this.saga = saga;
   }
 
+  public Level getLoggingLvl() {
+    return loggingLvl;
+  }
+
+  public void setLoggingLvl(Level loggingLvl) {
+    this.loggingLvl = loggingLvl;
+  }
 }
