@@ -20,7 +20,7 @@ public class SagaTransactor {
   private final Level loggingLvl;
 
   public <A> A transact(String sagaName, Saga<A> saga) {
-    return run(sagaName, saga, new Stack<>()).getValue();
+    return run(sagaName, saga).getValue();
   }
 
   public SagaTransactor(Level loggingLvl) {
@@ -32,7 +32,7 @@ public class SagaTransactor {
   }
 
   public <A> A transactOrThrow(String sagaName, Saga<A> saga) {
-    EvaluationResult<A> result = run(sagaName, saga, new Stack<>());
+    EvaluationResult<A> result = run(sagaName, saga);
     if (result.isError()) {
       throw result.getError();
     }
@@ -49,32 +49,43 @@ public class SagaTransactor {
   }
 
   private <X> EvaluationResult<X> runLogged(String sagaName, Saga<X> saga) {
-    return run(sagaName, saga, new Stack<>());
+    return run(sagaName, saga);
   }
 
-  public <X, Y> EvaluationResult<X> run(String sagaName, Saga<X> saga, Stack<SagaCompensation> compensations) {
-    if (saga instanceof SagaSuccess) {
-      return EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
-    } else if (saga instanceof SagaStep) {
-      SagaStep<X> sagaStep = (SagaStep<X>) saga;
-      return evaluateStep(sagaName, sagaStep, compensations);
-    } else if (saga instanceof SagaFlatMap) {
-      SagaFlatMap<Y, X> sagaFlatMap = (SagaFlatMap<Y, X>) saga;
-      EvaluationResult<Y> runA = run(sagaName, sagaFlatMap.getA(), compensations);
-      return runA.isSuccess()
-          ? run(sagaName, sagaFlatMap.getfB().apply(runA.getValue()), compensations)
-          : EvaluationResult.failed(runA.getError());
-    } else {
-      return EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
+
+  @SuppressWarnings("unchecked")
+  public <X> EvaluationResult<X> run(String sagaName, Saga<X> sagaInput) {
+    Stack<SagaCompensation> compensations = new Stack<>();
+    Stack<Saga<Object>> sagas = new Stack<>();
+    sagas.add((Saga<Object>) sagaInput);
+    Stack<Function<Object, Saga<Object>>> functions = new Stack<>();
+    EvaluationResult<Object> current = EvaluationResult.failed(new IllegalArgumentException("Empty saga defined"));
+    while (!sagas.empty() || !functions.empty()) {
+      Saga<Object> saga = sagas.empty()
+          ? functions.pop().apply(current.getValue())
+          : sagas.pop();
+      if (saga instanceof SagaSuccess) {
+        current = EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
+      } else if (saga instanceof SagaStep) {
+        SagaStep<Object> sagaStep = (SagaStep<Object>) saga;
+        current = evaluateStep(sagaName, sagaStep, compensations);
+      } else if (saga instanceof SagaFlatMap) {
+        SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
+        sagas.add(sagaFlatMap.getA());
+        functions.add(sagaFlatMap.getfB());
+      } else {
+        current = EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
+      }
     }
+    return (EvaluationResult<X>) current;
   }
 
-  private <X> EvaluationResult<X> evaluateStep(String sagaName, SagaStep<X> sagaStep, Stack<SagaCompensation> compensations) {
-    Callable<X> action = sagaStep.getAction().getAction();
+  private EvaluationResult<Object> evaluateStep(String sagaName, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations) {
+    Callable<Object> action = sagaStep.getAction().getAction();
     compensations.add(sagaStep.getCompensator());
     long actionStart = System.currentTimeMillis();
     try {
-      X callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
+      Object callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
       logAction(sagaName, sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart);
       return EvaluationResult.success(callResult);
     } catch (Throwable ta) {
