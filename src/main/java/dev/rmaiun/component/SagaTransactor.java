@@ -2,6 +2,7 @@ package dev.rmaiun.component;
 
 import dev.rmaiun.exception.SagaActionFailedException;
 import dev.rmaiun.exception.SagaCompensationFailedException;
+import dev.rmaiun.func.StubInputFunction;
 import dev.rmaiun.saga.Saga;
 import dev.rmaiun.saga.SagaFlatMap;
 import dev.rmaiun.saga.SagaStep;
@@ -56,14 +57,15 @@ public class SagaTransactor {
   @SuppressWarnings("unchecked")
   public <X> EvaluationResult<X> run(String sagaName, Saga<X> sagaInput) {
     Stack<SagaCompensation> compensations = new Stack<>();
-    Stack<Saga<Object>> sagas = new Stack<>();
-    sagas.add((Saga<Object>) sagaInput);
     Stack<Function<Object, Saga<Object>>> functions = new Stack<>();
+    Function<Object, Saga<Object>> sagaInputFunc = (StubInputFunction<Saga<Object>>) o -> (Saga<Object>) sagaInput;
+    functions.add(sagaInputFunc);
     EvaluationResult<Object> current = EvaluationResult.failed(new IllegalArgumentException("Empty saga defined"));
-    while (!sagas.empty() || !functions.empty()) {
-      Saga<Object> saga = sagas.empty()
-          ? functions.pop().apply(current.getValue())
-          : sagas.pop();
+    while (!functions.empty()) {
+      Function<Object, Saga<Object>> f = functions.pop();
+      Saga<Object> saga = f instanceof StubInputFunction
+          ? f.apply(null)
+          : f.apply(current.getValue());
       if (saga instanceof SagaSuccess) {
         current = EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
       } else if (saga instanceof SagaStep) {
@@ -71,8 +73,8 @@ public class SagaTransactor {
         current = evaluateStep(sagaName, sagaStep, compensations);
       } else if (saga instanceof SagaFlatMap) {
         SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
-        sagas.add(sagaFlatMap.getA());
         functions.add(sagaFlatMap.getfB());
+        functions.add(sagaFlatMap.getA());
       } else {
         current = EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
       }

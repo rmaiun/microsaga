@@ -26,16 +26,21 @@ public class Example {
     SagaStep<String> writeSomething = Sagas.action("writeSomething", () -> writeSomething("Hello"))
         .compensate(Sagas.compensation("cleanSomething", () -> cleanSomething("Hello")));
 
-    Saga<Integer> hello = generateStringStep.then(writeSomething)
+    Saga<Integer> hello = generateStringStep
+        .then(writeSomething)
+        .then(writeSomething)
+        .then(writeSomething)
+        .then(writeSomething)
+        .then(writeSomething)
         .map(String::length);
 
     Integer bla = new SagaManager().saga(hello)
         .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
-        .withLoggingLvl(Level.DEBUG)
+        .withLoggingLvl(Level.INFO)
         .transactOrThrow();
-    Integer bla2 = new SagaManager().saga(hello)
-        .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
-        .transactOrThrow();
+    // Integer bla2 = new SagaManager().saga(hello)
+    //     .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
+    //     .transactOrThrow();
   }
 
   static String generateString(int qty) {
