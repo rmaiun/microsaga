@@ -1,5 +1,6 @@
 package dev.rmaiun.component;
 
+import com.sun.istack.internal.NotNull;
 import dev.rmaiun.exception.SagaActionFailedException;
 import dev.rmaiun.exception.SagaCompensationFailedException;
 import dev.rmaiun.func.StubInputFunction;
@@ -24,7 +25,7 @@ public class SagaTransactor {
     return run(sagaName, saga).getValue();
   }
 
-  public SagaTransactor(Level loggingLvl) {
+  public SagaTransactor(@NotNull Level loggingLvl) {
     if (loggingLvl == null) {
       this.loggingLvl = Level.INFO;
     } else {

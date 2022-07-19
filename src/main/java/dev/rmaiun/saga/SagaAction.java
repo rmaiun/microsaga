@@ -1,5 +1,6 @@
 package dev.rmaiun.saga;
 
+import com.sun.istack.internal.NotNull;
 import dev.rmaiun.support.SagaCompensation;
 import java.util.concurrent.Callable;
 import net.jodah.failsafe.RetryPolicy;
@@ -10,7 +11,7 @@ public class SagaAction<A> extends Saga<A> {
   private final RetryPolicy<A> retryPolicy;
   private final Callable<A> action;
 
-  public SagaAction(String name, Callable<A> action, RetryPolicy<A> retryPolicy) {
+  public SagaAction(@NotNull String name, @NotNull Callable<A> action, @NotNull RetryPolicy<A> retryPolicy) {
     this.name = name;
     this.action = action;
     this.retryPolicy = retryPolicy;
