@@ -1,15 +1,15 @@
-package dev.rmaiun.component;
+package dev.rmaiun.saga4j.component;
 
 import com.sun.istack.internal.NotNull;
-import dev.rmaiun.exception.SagaActionFailedException;
-import dev.rmaiun.exception.SagaCompensationFailedException;
-import dev.rmaiun.func.StubInputFunction;
-import dev.rmaiun.saga.Saga;
-import dev.rmaiun.saga.SagaFlatMap;
-import dev.rmaiun.saga.SagaStep;
-import dev.rmaiun.saga.SagaSuccess;
-import dev.rmaiun.support.EvaluationResult;
-import dev.rmaiun.support.SagaCompensation;
+import dev.rmaiun.saga4j.exception.SagaActionFailedException;
+import dev.rmaiun.saga4j.exception.SagaCompensationFailedException;
+import dev.rmaiun.saga4j.func.StubInputFunction;
+import dev.rmaiun.saga4j.saga.Saga;
+import dev.rmaiun.saga4j.saga.SagaFlatMap;
+import dev.rmaiun.saga4j.saga.SagaStep;
+import dev.rmaiun.saga4j.saga.SagaSuccess;
+import dev.rmaiun.saga4j.support.EvaluationResult;
+import dev.rmaiun.saga4j.support.SagaCompensation;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -98,10 +98,12 @@ public class SagaTransactor {
       try {
         while (!compensations.empty()) {
           SagaCompensation pop = compensations.pop();
-          compensationStart = System.currentTimeMillis();
-          compensation = pop.getName();
-          Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
-          logCompensation(sagaName, compensation, System.currentTimeMillis() - compensationStart);
+          if (!pop.isTechnical()) {
+            compensationStart = System.currentTimeMillis();
+            compensation = pop.getName();
+            Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
+            logCompensation(sagaName, compensation, System.currentTimeMillis() - compensationStart);
+          }
         }
       } catch (Throwable tc) {
         logCompensation(sagaName, compensation, System.currentTimeMillis() - compensationStart);

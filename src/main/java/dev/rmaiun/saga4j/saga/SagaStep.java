@@ -1,7 +1,7 @@
-package dev.rmaiun.saga;
+package dev.rmaiun.saga4j.saga;
 
 import com.sun.istack.internal.NotNull;
-import dev.rmaiun.support.SagaCompensation;
+import dev.rmaiun.saga4j.support.SagaCompensation;
 
 public class SagaStep<A> extends Saga<A> {
 

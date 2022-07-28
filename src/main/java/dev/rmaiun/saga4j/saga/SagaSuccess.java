@@ -1,4 +1,4 @@
-package dev.rmaiun.saga;
+package dev.rmaiun.saga4j.saga;
 
 import com.sun.istack.internal.NotNull;
 

@@ -1,4 +1,4 @@
-package dev.rmaiun.support;
+package dev.rmaiun.saga4j.support;
 
 public class LogVal {
 

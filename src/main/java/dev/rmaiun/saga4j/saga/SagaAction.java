@@ -1,7 +1,7 @@
-package dev.rmaiun.saga;
+package dev.rmaiun.saga4j.saga;
 
 import com.sun.istack.internal.NotNull;
-import dev.rmaiun.support.SagaCompensation;
+import dev.rmaiun.saga4j.support.SagaCompensation;
 import java.util.concurrent.Callable;
 import net.jodah.failsafe.RetryPolicy;
 
@@ -19,6 +19,10 @@ public class SagaAction<A> extends Saga<A> {
 
   public SagaStep<A> compensate(SagaCompensation compensation) {
     return new SagaStep<>(this, compensation);
+  }
+
+  public SagaStep<A> withoutCompensation() {
+    return new SagaStep<>(this, SagaCompensation.technical());
   }
 
   public String getName() {

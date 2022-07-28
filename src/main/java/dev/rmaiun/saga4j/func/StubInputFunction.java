@@ -1,4 +1,4 @@
-package dev.rmaiun.func;
+package dev.rmaiun.saga4j.func;
 
 import java.util.function.Function;
 

@@ -1,8 +1,8 @@
-package dev.rmaiun.component;
+package dev.rmaiun.saga4j.component;
 
 import com.sun.istack.internal.NotNull;
-import dev.rmaiun.saga.Saga;
-import dev.rmaiun.support.SagaRunner;
+import dev.rmaiun.saga4j.saga.Saga;
+import dev.rmaiun.saga4j.support.SagaRunner;
 import org.apache.logging.log4j.Level;
 
 public class SagaManager {

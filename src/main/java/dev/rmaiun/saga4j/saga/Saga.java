@@ -1,8 +1,7 @@
-package dev.rmaiun.saga;
+package dev.rmaiun.saga4j.saga;
 
-import dev.rmaiun.Sagas;
+import dev.rmaiun.saga4j.Sagas;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public abstract class Saga<A> {
 

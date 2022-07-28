@@ -1,4 +1,4 @@
-package dev.rmaiun.exception;
+package dev.rmaiun.saga4j.exception;
 
 public class SagaActionFailedException extends RuntimeException {
 

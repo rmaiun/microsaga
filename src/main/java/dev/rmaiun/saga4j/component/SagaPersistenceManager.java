@@ -1,4 +1,4 @@
-package dev.rmaiun.component;
+package dev.rmaiun.saga4j.component;
 
 import java.util.ArrayList;
 import java.util.List;

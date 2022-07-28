@@ -1,7 +1,7 @@
-package dev.rmaiun.support;
+package dev.rmaiun.saga4j.support;
 
-import dev.rmaiun.component.SagaTransactor;
-import dev.rmaiun.saga.Saga;
+import dev.rmaiun.saga4j.component.SagaTransactor;
+import dev.rmaiun.saga4j.saga.Saga;
 import java.util.UUID;
 import java.util.function.Function;
 import org.apache.logging.log4j.Level;

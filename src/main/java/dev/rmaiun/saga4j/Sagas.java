@@ -1,10 +1,10 @@
-package dev.rmaiun;
+package dev.rmaiun.saga4j;
 
-import dev.rmaiun.saga.Saga;
-import dev.rmaiun.saga.SagaAction;
-import dev.rmaiun.saga.SagaFlatMap;
-import dev.rmaiun.saga.SagaSuccess;
-import dev.rmaiun.support.SagaCompensation;
+import dev.rmaiun.saga4j.saga.Saga;
+import dev.rmaiun.saga4j.saga.SagaAction;
+import dev.rmaiun.saga4j.saga.SagaFlatMap;
+import dev.rmaiun.saga4j.saga.SagaSuccess;
+import dev.rmaiun.saga4j.support.SagaCompensation;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import net.jodah.failsafe.RetryPolicy;

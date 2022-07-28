@@ -1,7 +1,7 @@
-package dev.rmaiun.saga;
+package dev.rmaiun.saga4j.saga;
 
 import com.sun.istack.internal.NotNull;
-import dev.rmaiun.func.StubInputFunction;
+import dev.rmaiun.saga4j.func.StubInputFunction;
 import java.util.function.Function;
 
 public class SagaFlatMap<A, B> extends Saga<B> {
