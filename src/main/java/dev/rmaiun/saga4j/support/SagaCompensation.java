@@ -1,6 +1,6 @@
 package dev.rmaiun.saga4j.support;
 
-import com.sun.istack.internal.NotNull;
+
 import net.jodah.failsafe.RetryPolicy;
 
 public class SagaCompensation {
@@ -10,14 +10,14 @@ public class SagaCompensation {
   private final RetryPolicy<Object> retryPolicy;
   private final boolean technical;
 
-  public SagaCompensation(@NotNull String name, @NotNull Runnable compensation, @NotNull RetryPolicy<Object> retryPolicy) {
+  public SagaCompensation(String name, Runnable compensation, RetryPolicy<Object> retryPolicy) {
     this.name = name;
     this.compensation = compensation;
     this.retryPolicy = retryPolicy;
     this.technical = false;
   }
 
-  public SagaCompensation(@NotNull String name, @NotNull Runnable compensation, @NotNull RetryPolicy<Object> retryPolicy, boolean technical) {
+  public SagaCompensation(String name, Runnable compensation, RetryPolicy<Object> retryPolicy, boolean technical) {
     this.name = name;
     this.compensation = compensation;
     this.retryPolicy = retryPolicy;

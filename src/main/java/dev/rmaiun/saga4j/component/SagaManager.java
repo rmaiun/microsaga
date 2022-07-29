@@ -1,6 +1,6 @@
 package dev.rmaiun.saga4j.component;
 
-import com.sun.istack.internal.NotNull;
+
 import dev.rmaiun.saga4j.saga.Saga;
 import dev.rmaiun.saga4j.support.SagaRunner;
 import org.apache.logging.log4j.Level;
@@ -13,7 +13,7 @@ public class SagaManager {
     this.loggingLvl = Level.INFO;
   }
 
-  public SagaManager(@NotNull Level loggingLvl) {
+  public SagaManager(Level loggingLvl) {
     this.loggingLvl = loggingLvl;
   }
 

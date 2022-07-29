@@ -1,76 +1,31 @@
 package dev.rmaiun;
 
-import dev.rmaiun.saga4j.Sagas;
-import dev.rmaiun.saga4j.component.SagaManager;
-import dev.rmaiun.saga4j.saga.Saga;
-import dev.rmaiun.saga4j.saga.SagaStep;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
-import net.jodah.failsafe.RetryPolicy;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import dev.rmaiun.dto.CreateOrderDto;
+import dev.rmaiun.helper.CreateOrderHelper;
+import dev.rmaiun.services.Catalog;
+import dev.rmaiun.services.DeliveryService;
+import dev.rmaiun.services.MoneyTransferService;
+import dev.rmaiun.services.OrderService;
+import java.util.HashMap;
 
 public class Example {
 
-  static AtomicInteger x = new AtomicInteger();
-  private static final Logger LOG = LogManager.getLogger(Example.class);
-  static List<String> data = new ArrayList<>();
-
   public static void main(String[] args) {
-    LOG.info("Start example");
-    Saga<String> generateStringStep = Sagas.retryableAction("generateString", () -> generateString(4), new RetryPolicy<String>().withMaxRetries(4))
-        .compensate(Sagas.retryableCompensation("removeString", () -> removeString("****"), new RetryPolicy<>().withMaxRetries(3)));
-    SagaStep<String> writeSomething = Sagas.action("writeSomething", () -> writeSomething("Hello"))
-        .compensate(Sagas.compensation("cleanSomething", () -> cleanSomething("Hello")));
+    Catalog catalog = new Catalog();
+    catalog.addProduct("Samsung Galaxy", 10);
+    catalog.addProduct("Iphone X", 10);
+    OrderService orderService = new OrderService(catalog);
 
-    Saga<Integer> hello = generateStringStep
-        .then(writeSomething)
-        .then(writeSomething)
-        .then(writeSomething)
-        .then(writeSomething)
-        .then(writeSomething)
-        .map(String::length);
+    HashMap<String, Integer> accounts = new HashMap<>();
+    accounts.put("user1", 1000);
+    accounts.put("user2", 1000);
+    MoneyTransferService moneyTransferService = new MoneyTransferService(accounts);
 
-    Integer bla = new SagaManager().saga(hello)
-        .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
-        .withLoggingLvl(Level.INFO)
-        .transactOrThrow();
-    // Integer bla2 = new SagaManager().saga(hello)
-    //     .withName(String.format("SAGA-%s", UUID.randomUUID().toString().replaceAll("-", "")))
-    //     .transactOrThrow();
-  }
+    DeliveryService deliveryService = new DeliveryService();
 
-  static String generateString(int qty) {
-    if (x.getAndIncrement() < 2) {
-      LOG.info("Call 'generateString()' with exception");
-      throw new RuntimeException("Small atomic int value" + x.get());
-    }
-    LOG.info("Call 'generateString()'");
-    String x = IntStream.range(0, qty)
-        .mapToObj(a -> "*")
-        .reduce("", (a, b) -> a + b);
+    CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService);
 
-    data.add(x);
-    return x;
-  }
+    createOrderHelper.createOrder(new CreateOrderDto("user1", "Iphone X"));
 
-  static void removeString(String str) {
-    LOG.info("Call 'removeString()'");
-    // throw new RuntimeException("Problem with string removal");
-    // data.removeIf(x -> x.equals(str));
-  }
-
-  static String writeSomething(String text) {
-    LOG.info("Call 'writeSomething()'");
-    // throw new RuntimeException("bla");
-    return "";
-  }
-
-  static void cleanSomething(String text) {
-    LOG.info("Call 'cleanSomething()'");
   }
 }

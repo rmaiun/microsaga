@@ -1,12 +1,12 @@
 package dev.rmaiun.saga4j.saga;
 
-import com.sun.istack.internal.NotNull;
+
 
 public class SagaSuccess<T> extends Saga<T> {
 
-  private T value;
+  private final T value;
 
-  public SagaSuccess(@NotNull T value) {
+  public SagaSuccess(T value) {
     this.value = value;
   }
 
