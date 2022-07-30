@@ -12,7 +12,7 @@ public class SagaRunner<A> {
   private Saga<A> saga;
   private Level loggingLvl;
 
-  public A transact() {
+  public EvaluationResult<A> transact() {
     return new SagaTransactor(loggingLvl).transact(name, saga);
   }
 

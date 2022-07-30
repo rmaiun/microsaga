@@ -20,8 +20,8 @@ public class SagaTransactor {
 
   private final Level loggingLvl;
 
-  public <A> A transact(String sagaName, Saga<A> saga) {
-    return run(sagaName, saga).getValue();
+  public <A> EvaluationResult<A> transact(String sagaName, Saga<A> saga) {
+    return run(sagaName, saga);
   }
 
   public SagaTransactor(Level loggingLvl) {

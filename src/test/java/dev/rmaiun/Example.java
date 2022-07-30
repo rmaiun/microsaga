@@ -2,6 +2,7 @@ package dev.rmaiun;
 
 import dev.rmaiun.dto.CreateOrderDto;
 import dev.rmaiun.helper.CreateOrderHelper;
+import dev.rmaiun.services.BusinessLogger;
 import dev.rmaiun.services.Catalog;
 import dev.rmaiun.services.DeliveryService;
 import dev.rmaiun.services.MoneyTransferService;
@@ -22,10 +23,10 @@ public class Example {
     MoneyTransferService moneyTransferService = new MoneyTransferService(accounts);
 
     DeliveryService deliveryService = new DeliveryService();
+    BusinessLogger businessLogger = new BusinessLogger();
+    CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
 
-    CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService);
-
-    createOrderHelper.createOrder(new CreateOrderDto("user1", "Iphone X"));
-
+    // createOrderHelper.createOrder(new CreateOrderDto("user1", "Iphone X"));
+    createOrderHelper.createOrdersWithFailedDelivery(new CreateOrderDto("user1", "Iphone X"));
   }
 }

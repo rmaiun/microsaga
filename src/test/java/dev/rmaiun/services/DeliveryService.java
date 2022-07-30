@@ -15,7 +15,7 @@ public class DeliveryService {
     return true;
   }
 
-  public void registerDeliveryWithWrongAddress(String person) {
+  public boolean registerDeliveryWithWrongAddress(String person) {
     throw new RuntimeException("Invalid address");
   }
 
