@@ -14,7 +14,6 @@ public class Sagas {
   private Sagas() {
   }
 
-  // todo: should work with void methods
   public static <A> SagaAction<A> action(String name, Callable<A> action) {
     return new SagaAction<>(name, action, new RetryPolicy<A>().withMaxRetries(0));
   }

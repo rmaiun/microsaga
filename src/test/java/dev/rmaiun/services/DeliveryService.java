@@ -1,5 +1,6 @@
 package dev.rmaiun.services;
 
+import dev.rmaiun.saga4j.support.NoResult;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import org.apache.logging.log4j.LogManager;
@@ -10,12 +11,12 @@ public class DeliveryService {
   private static final Logger LOG = LogManager.getLogger(DeliveryService.class);
 
 
-  public boolean registerDelivery(String person) {
+  public NoResult registerDelivery(String person) {
     LOG.info("Hello, {}! Your delivery will be on place at {}", person, ZonedDateTime.now(ZoneOffset.UTC));
-    return true;
+    return NoResult.instance();
   }
 
-  public boolean registerDeliveryWithWrongAddress(String person) {
+  public NoResult registerDeliveryWithWrongAddress(String person) {
     throw new RuntimeException("Invalid address");
   }
 
