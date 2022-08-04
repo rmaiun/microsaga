@@ -94,5 +94,21 @@ public class CoreTests {
     assertFalse(result.isSuccess());
     assertEquals(SagaCompensationFailedException.class, result.getError().getClass());
   }
-  // todo: 'then' and 'heavy' tests
+
+  @Test
+  public void thenTest() {
+    AtomicInteger x = new AtomicInteger();
+    SagaStep<Integer> incrementStep = Sagas.action("initValue", x::incrementAndGet)
+        .withoutCompensation();
+
+    Saga<String> intToString = incrementStep
+        .then(Sagas.action("intToString", () -> String.format("int=%d", 1)).withoutCompensation())
+        .then(Sagas.action("intToString", () -> String.format("int=%d", 2)).withoutCompensation())
+        .then(Sagas.action("intToString", () -> String.format("int=%d", 3)).withoutCompensation());
+    EvaluationResult<String> result = SagaManager.use(intToString).transact();
+    assertNotNull(result);
+    assertTrue(result.isSuccess());
+    assertNotNull(result.getValue());
+    assertEquals("int=3", result.getValue());
+  }
 }
