@@ -17,6 +17,11 @@ public class SagaManager {
     this.loggingLvl = loggingLvl;
   }
 
+  public static <A> SagaRunner<A> use(Saga<A> saga){
+    SagaRunner<A> sagaRunner = new SagaRunner<>();
+    sagaRunner.setSaga(saga);
+    return sagaRunner;
+  }
   public <A> SagaRunner<A> saga(Saga<A> saga) {
     SagaRunner<A> ctx = new SagaRunner<>();
     ctx.setSaga(saga);

@@ -11,6 +11,10 @@ public class Catalog {
     products.merge(name, qty, Integer::sum);
   }
 
+  public Integer getProduct(String name) {
+    return products.get(name);
+  }
+
   public void decreaseProductQty(String name) {
     Integer integer = products.get(name);
     if (integer == null || integer <= 0) {

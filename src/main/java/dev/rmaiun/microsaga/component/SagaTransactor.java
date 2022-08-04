@@ -61,22 +61,26 @@ public class SagaTransactor {
     Function<Object, Saga<Object>> sagaInputFunc = (StubInputFunction<Saga<Object>>) o -> (Saga<Object>) sagaInput;
     functions.add(sagaInputFunc);
     EvaluationResult<Object> current = EvaluationResult.failed(new IllegalArgumentException("Empty saga defined"));
-    while (!functions.empty()) {
+    boolean noError = true;
+    while (!functions.empty() && noError) {
       Function<Object, Saga<Object>> f = functions.pop();
       Saga<Object> saga = f instanceof StubInputFunction
           ? f.apply(null)
           : f.apply(current.getValue());
       if (saga instanceof SagaSuccess) {
         current = EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
+        noError = !current.isError();
       } else if (saga instanceof SagaStep) {
         SagaStep<Object> sagaStep = (SagaStep<Object>) saga;
         current = evaluateStep(sagaName, sagaStep, compensations);
+        noError = !current.isError();
       } else if (saga instanceof SagaFlatMap) {
         SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
         functions.add(sagaFlatMap.getfB());
         functions.add(sagaFlatMap.getA());
       } else {
         current = EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
+        noError = !current.isError();
       }
     }
     return (EvaluationResult<X>) current;
