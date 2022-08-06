@@ -79,7 +79,7 @@ public class CreateOrderHelperTests {
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
     createOrderHelper.createOrdersWithFailedDelivery(new CreateOrderDto("user1", "Iphone X"));
     Assertions.assertEquals(1000, accounts.get(USER_1));
-    Assertions.assertEquals(catalog.getProduct(IPHONE_X), accounts.get("user1"));
+    Assertions.assertEquals(10, catalog.getProduct(IPHONE_X));
   }
 
   @Test
@@ -100,6 +100,6 @@ public class CreateOrderHelperTests {
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
     createOrderHelper.createOrdersWithRetryCompensation(new CreateOrderDto("user1", "Iphone X"));
     Assertions.assertEquals(1000, accounts.get(USER_1));
-    Assertions.assertEquals(catalog.getProduct(IPHONE_X), accounts.get("user1"));
+    Assertions.assertEquals(10, catalog.getProduct(IPHONE_X));
   }
 }

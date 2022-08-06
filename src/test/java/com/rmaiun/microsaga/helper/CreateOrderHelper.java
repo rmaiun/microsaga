@@ -85,7 +85,7 @@ public class CreateOrderHelper {
             new RetryPolicy<NoResult>().withMaxRetries(4))
         .compensate(Sagas.compensation("cancelPayment (lagging)", () -> moneyTransferService.processPayment(new PaymentRequest(dto.getPerson(), -100))));
 
-    SagaStep<NoResult> deliverySagaPart = Sagas.action("registerDelivery", () -> deliveryService.registerDeliveryWithWrongAddress(dto.getPerson()))
+    SagaStep<NoResult> deliverySagaPart = Sagas.action("registerDelivery", () -> deliveryService.registerDelivery(dto.getPerson()))
         .compensate(Sagas.compensation("failedDeliveryBusinessLog", () -> businessLogger.createBusinessLog("Delivery planning was failed for user " + dto.getPerson())));
 
     EvaluationResult<NoResult> result = new SagaManager()
