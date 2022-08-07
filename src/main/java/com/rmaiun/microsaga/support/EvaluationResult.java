@@ -1,25 +1,32 @@
 package com.rmaiun.microsaga.support;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class EvaluationResult<A> {
 
   private final A value;
+  private final EvaluationHistory evaluationHistory;
   private final RuntimeException error;
 
+  public EvaluationResult(A value, RuntimeException error) {
+    this.value = value;
+    this.evaluationHistory = null;
+    this.error = error;
+  }
+
+  public EvaluationResult(A value, EvaluationHistory evaluationHistory, RuntimeException error) {
+    this.value = value;
+    this.evaluationHistory = evaluationHistory;
+    this.error = error;
+  }
+
   public static <X> EvaluationResult<X> success(X data) {
-    return new EvaluationResult<>(data, null);
+    return new EvaluationResult<>(data, null, null);
   }
 
   public static <X> EvaluationResult<X> failed(RuntimeException t) {
     return new EvaluationResult<>(null, t);
-  }
-
-  public static <X> EvaluationResult<X> compensationFailed(RuntimeException t) {
-    return new EvaluationResult<>(null, t);
-  }
-
-  public EvaluationResult(A value, RuntimeException error) {
-    this.value = value;
-    this.error = error;
   }
 
   public boolean isError() {
@@ -36,5 +43,9 @@ public class EvaluationResult<A> {
 
   public RuntimeException getError() {
     return error;
+  }
+
+  public EvaluationHistory getEvaluationHistory() {
+    return evaluationHistory;
   }
 }

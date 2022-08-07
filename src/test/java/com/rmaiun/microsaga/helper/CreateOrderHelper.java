@@ -1,21 +1,26 @@
 package com.rmaiun.microsaga.helper;
 
+import com.rmaiun.microsaga.Sagas;
+import com.rmaiun.microsaga.component.SagaManager;
+import com.rmaiun.microsaga.dto.CreateOrderDto;
 import com.rmaiun.microsaga.dto.PaymentRequest;
+import com.rmaiun.microsaga.dto.ProductOrder;
+import com.rmaiun.microsaga.saga.SagaStep;
 import com.rmaiun.microsaga.services.BusinessLogger;
 import com.rmaiun.microsaga.services.DeliveryService;
 import com.rmaiun.microsaga.services.MoneyTransferService;
 import com.rmaiun.microsaga.services.OrderService;
-import com.rmaiun.microsaga.dto.CreateOrderDto;
-import com.rmaiun.microsaga.dto.ProductOrder;
-import com.rmaiun.microsaga.Sagas;
-import com.rmaiun.microsaga.component.SagaManager;
-import com.rmaiun.microsaga.saga.SagaStep;
+import com.rmaiun.microsaga.support.Evaluation;
+import com.rmaiun.microsaga.support.EvaluationHistory;
 import com.rmaiun.microsaga.support.EvaluationResult;
 import com.rmaiun.microsaga.support.NoResult;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CreateOrderHelper {
 
+  private static final Logger LOG = LogManager.getLogger(CreateOrderHelper.class);
   private final OrderService orderService;
   private final MoneyTransferService moneyTransferService;
   private final DeliveryService deliveryService;
@@ -38,7 +43,7 @@ public class CreateOrderHelper {
     SagaStep<NoResult> deliverySagaPart = Sagas.action("registerDelivery", () -> deliveryService.registerDelivery(dto.getPerson()))
         .withoutCompensation();
 
-    NoResult result = new SagaManager()
+    new SagaManager()
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
         .withName("testSaga")
         .transactOrThrow();
@@ -58,6 +63,7 @@ public class CreateOrderHelper {
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
         .withName("testSaga")
         .transact();
+    logSaga(result.getEvaluationHistory());
   }
 
   public void createOrdersWithRetryCompensation(CreateOrderDto dto) {
@@ -75,6 +81,7 @@ public class CreateOrderHelper {
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
         .withName("testSaga")
         .transact();
+    logSaga(result.getEvaluationHistory());
   }
 
   public void createOrdersWithRetryAction(CreateOrderDto dto) {
@@ -92,5 +99,12 @@ public class CreateOrderHelper {
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
         .withName("testSaga")
         .transact();
+    logSaga(result.getEvaluationHistory());
+  }
+
+  private void logSaga(EvaluationHistory evaluationHistory) {
+    for (Evaluation e : evaluationHistory.getEvaluations()) {
+      LOG.info("SAGA:{} [{}:{}] {} {}(ms)", evaluationHistory.getSagaName(), e.getEvaluationType().name().toLowerCase(), e.isSuccess() ? "success" : "failed", e.getName(), e.getDuration());
+    }
   }
 }
