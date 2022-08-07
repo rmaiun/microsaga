@@ -1,40 +1,38 @@
-plugins {
-  id 'java'
-  id 'java-library'
-}
+allprojects {
+  apply plugin: 'java'
+  apply plugin: 'java-library'
 
-group 'dev.rmaiun'
-version '0.0.1'
+  group 'com.rmaiun.microsaga'
+  version '0.1.0'
 
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  implementation 'net.jodah:failsafe:2.4.4'
-  testImplementation 'org.apache.logging.log4j:log4j-api:2.18.0'
-  testImplementation 'org.apache.logging.log4j:log4j-core:2.18.0'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-}
-
-test {
-  useJUnitPlatform()
-}
-
-tasks.named('jar') {
-  manifest {
-    attributes(
-        'Implementation-Title': project.name,
-        'Implementation-Version': project.version
-    )
+  repositories {
+    mavenCentral()
   }
-}
 
-task fullJar(type: Jar) {
-  from sourceSets.main.output
-  dependsOn configurations.runtimeClasspath
-  from {
-    configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+  dependencies {
+    implementation 'net.jodah:failsafe:2.4.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  }
+
+  test {
+    useJUnitPlatform()
+  }
+
+  tasks.named('jar') {
+    manifest {
+      attributes(
+          'Implementation-Title': project.name,
+          'Implementation-Version': project.version
+      )
+    }
+  }
+
+  task fullJar(type: Jar) {
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+      configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
   }
 }
