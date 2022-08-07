@@ -1,8 +1,5 @@
 package com.rmaiun.microsaga.support;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class EvaluationResult<A> {
 
   private final A value;
