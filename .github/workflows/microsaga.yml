@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution:  ${{ matrix.jdk }}
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Make mvn executable
+        run: chmod +x ./mvnw
+      - name: Build with Maven
+        run: ./mvnw clean install
