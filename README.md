@@ -58,7 +58,7 @@ Saga<User> saga=Sagas.action("createUser",()->myService.createUser(user))
 ```  
 
 Saga supports lazy evaluation, so it will not be run until we ask for it.
-To launch it, we should create instance of `SagaManager` call `SagaManager.use(saga)` static method. This class is responsible for saga transactions
+To launch it, we should create instance of `SagaManager` or call `SagaManager.use(saga)` static method. This class is responsible for saga transactions
 so lets run our saga:
 
 ```java

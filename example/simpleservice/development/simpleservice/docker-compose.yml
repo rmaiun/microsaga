@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  sime_postgres:
+    image: postgres:14
+    container_name: sime_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=root
+      - CONNECTION_STRING=jdbc:postgresql://postgresql/root?user=root&password=password
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  sime_mongo:
+    image: mongo:3.6
+    container_name: sime_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo sime_mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
