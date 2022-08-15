@@ -1,19 +1,18 @@
 package io.github.simpleservice.domain;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class Order {
+public class Account {
+
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
-  private String product;
-  @Column(name = "saga_id")
-  private String sagaId;
+  private String code;
+  private Long amount;
 
   public Long getId() {
     return id;
@@ -23,19 +22,19 @@ public class Order {
     this.id = id;
   }
 
-  public String getProduct() {
-    return product;
+  public String getCode() {
+    return code;
   }
 
-  public void setProduct(String product) {
-    this.product = product;
+  public void setCode(String code) {
+    this.code = code;
   }
 
-  public String getSagaId() {
-    return sagaId;
+  public Long getAmount() {
+    return amount;
   }
 
-  public void setSagaId(String sagaId) {
-    this.sagaId = sagaId;
+  public void setAmount(Long amount) {
+    this.amount = amount;
   }
 }

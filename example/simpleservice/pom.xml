@@ -23,17 +23,17 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>io.github.rmaiun</groupId>
+			<artifactId>microsaga</artifactId>
+			<version>0.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -56,6 +56,14 @@
 				<groupId>org.flywaydb</groupId>
 				<artifactId>flyway-maven-plugin</artifactId>
 				<version>9.1.3</version>
+				<configuration>
+					<user>root</user>
+					<password>password</password>
+					<url>jdbc:postgresql://localhost:5432/root?currentSchema=simpleservice</url>
+					<schemas>
+						<schema>simpleservice</schema>
+					</schemas>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

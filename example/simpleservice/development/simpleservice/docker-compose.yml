@@ -21,16 +21,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-
-  sime_mongo:
-    image: mongo:3.6
-    container_name: sime_mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo sime_mongo:27017/test --quiet
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 5s
