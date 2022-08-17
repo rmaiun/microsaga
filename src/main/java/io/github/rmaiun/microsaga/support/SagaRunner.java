@@ -9,7 +9,7 @@ import java.util.function.Function;
 public class SagaRunner<A> {
 
   private final SagaTransactor sagaTransactor;
-  private String name = UUID.randomUUID().toString().replace("-", "");
+  private String id = UUID.randomUUID().toString().replace("-", "");
   private Saga<A> saga;
 
   public SagaRunner(SagaTransactor sagaTransactor) {
@@ -17,29 +17,29 @@ public class SagaRunner<A> {
   }
 
   public EvaluationResult<A> transact() {
-    return new DefaultSagaTransactor().transact(name, saga);
+    return new DefaultSagaTransactor().transact(id, saga);
   }
 
   public A transactOrThrow() {
-    return new DefaultSagaTransactor().transactOrThrow(name, saga);
+    return new DefaultSagaTransactor().transactOrThrow(id, saga);
   }
 
   public <E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    return new DefaultSagaTransactor().transactOrThrow(name, saga, errorTransformer);
+    return new DefaultSagaTransactor().transactOrThrow(id, saga, errorTransformer);
   }
 
 
   public SagaRunner<A> withName(String name) {
-    this.name = name;
+    this.id = name;
     return this;
   }
 
-  public String getName() {
-    return name;
+  public String getId() {
+    return id;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setId(String name) {
+    this.id = name;
   }
 
   public Saga<A> getSaga() {

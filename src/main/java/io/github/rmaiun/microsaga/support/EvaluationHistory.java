@@ -5,16 +5,16 @@ import java.util.Objects;
 
 public class EvaluationHistory {
 
-  private final String sagaName;
+  private final String sagaId;
   private final List<Evaluation> evaluations;
 
-  public EvaluationHistory(String sagaName, List<Evaluation> evaluations) {
-    this.sagaName = sagaName;
+  public EvaluationHistory(String sagaId, List<Evaluation> evaluations) {
+    this.sagaId = sagaId;
     this.evaluations = evaluations;
   }
 
-  public String getSagaName() {
-    return sagaName;
+  public String getSagaId() {
+    return sagaId;
   }
 
   public List<Evaluation> getEvaluations() {
@@ -24,7 +24,7 @@ public class EvaluationHistory {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("EvaluationHistory{");
-    sb.append("sagaName='").append(sagaName).append('\'');
+    sb.append("sagaName='").append(sagaId).append('\'');
     sb.append(", evaluations=").append(evaluations);
     sb.append('}');
     return sb.toString();
@@ -41,7 +41,7 @@ public class EvaluationHistory {
 
     EvaluationHistory that = (EvaluationHistory) o;
 
-    if (!Objects.equals(sagaName, that.sagaName)) {
+    if (!Objects.equals(sagaId, that.sagaId)) {
       return false;
     }
     return Objects.equals(evaluations, that.evaluations);
@@ -49,7 +49,7 @@ public class EvaluationHistory {
 
   @Override
   public int hashCode() {
-    int result = sagaName != null ? sagaName.hashCode() : 0;
+    int result = sagaId != null ? sagaId.hashCode() : 0;
     result = 31 * result + (evaluations != null ? evaluations.hashCode() : 0);
     return result;
   }

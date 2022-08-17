@@ -1,5 +1,7 @@
 package io.github.rmaiun.microsaga.support;
 
+import java.util.function.Function;
+
 public class EvaluationResult<A> {
 
   private final A value;
@@ -44,5 +46,19 @@ public class EvaluationResult<A> {
 
   public EvaluationHistory getEvaluationHistory() {
     return evaluationHistory;
+  }
+
+  public A valueOrThrow() {
+    if (isError()) {
+      throw getError();
+    }
+    return getValue();
+  }
+
+  public <E extends RuntimeException> A valueOrThrow(Function<Throwable, E> errorTransformer) {
+    if (isError()) {
+      throw errorTransformer.apply(getError());
+    }
+    return getValue();
   }
 }

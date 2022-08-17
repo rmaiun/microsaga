@@ -4,6 +4,7 @@ import io.github.rmaiun.microsaga.exception.SagaActionFailedException;
 import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
 import io.github.rmaiun.microsaga.func.StubInputFunction;
 import io.github.rmaiun.microsaga.saga.Saga;
+import io.github.rmaiun.microsaga.saga.SagaAction;
 import io.github.rmaiun.microsaga.saga.SagaFlatMap;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.saga.SagaSuccess;
@@ -21,13 +22,13 @@ import net.jodah.failsafe.Failsafe;
 public class DefaultSagaTransactor implements SagaTransactor {
 
   @Override
-  public <A> EvaluationResult<A> transact(String sagaName, Saga<A> saga) {
-    return run(sagaName, saga);
+  public <A> EvaluationResult<A> transact(String sagaId, Saga<A> saga) {
+    return run(sagaId, saga);
   }
 
   @Override
-  public <A> A transactOrThrow(String sagaName, Saga<A> saga) {
-    EvaluationResult<A> result = run(sagaName, saga);
+  public <A> A transactOrThrow(String sagaId, Saga<A> saga) {
+    EvaluationResult<A> result = run(sagaId, saga);
     if (result.isError()) {
       throw result.getError();
     }
@@ -35,8 +36,8 @@ public class DefaultSagaTransactor implements SagaTransactor {
   }
 
   @Override
-  public <A, E extends RuntimeException> A transactOrThrow(String sagaName, Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    EvaluationResult<A> result = run(sagaName, saga);
+  public <A, E extends RuntimeException> A transactOrThrow(String sagaId, Saga<A> saga, Function<Throwable, E> errorTransformer) {
+    EvaluationResult<A> result = run(sagaId, saga);
     if (result.isError()) {
       Throwable error = result.getError();
       throw errorTransformer.apply(error);
@@ -46,7 +47,7 @@ public class DefaultSagaTransactor implements SagaTransactor {
 
 
   @SuppressWarnings("unchecked")
-  public <X> EvaluationResult<X> run(String sagaName, Saga<X> sagaInput) {
+  public <X> EvaluationResult<X> run(String sagaId, Saga<X> sagaInput) {
     Stack<SagaCompensation> compensations = new Stack<>();
     Stack<Function<Object, Saga<Object>>> functions = new Stack<>();
     List<Evaluation> evaluations = new ArrayList<>();
@@ -62,9 +63,13 @@ public class DefaultSagaTransactor implements SagaTransactor {
       if (saga instanceof SagaSuccess) {
         current = EvaluationResult.success(((SagaSuccess<X>) saga).getValue());
         noError = !current.isError();
+      } else if (saga instanceof SagaAction) {
+        SagaAction<Object> a = (SagaAction<Object>) saga;
+        current = evaluateStep(sagaId, a.withoutCompensation(), compensations, evaluations);
+        noError = !current.isError();
       } else if (saga instanceof SagaStep) {
         SagaStep<Object> sagaStep = (SagaStep<Object>) saga;
-        current = evaluateStep(sagaName, sagaStep, compensations, evaluations);
+        current = evaluateStep(sagaId, sagaStep, compensations, evaluations);
         noError = !current.isError();
       } else if (saga instanceof SagaFlatMap) {
         SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
@@ -75,10 +80,10 @@ public class DefaultSagaTransactor implements SagaTransactor {
         noError = !current.isError();
       }
     }
-    return new EvaluationResult<>((X) current.getValue(), new EvaluationHistory(sagaName, evaluations), current.getError());
+    return new EvaluationResult<>((X) current.getValue(), new EvaluationHistory(sagaId, evaluations), current.getError());
   }
 
-  private EvaluationResult<Object> evaluateStep(String sagaName, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations, List<Evaluation> evaluations) {
+  private EvaluationResult<Object> evaluateStep(String sagaId, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations, List<Evaluation> evaluations) {
     Callable<Object> action = sagaStep.getAction().getAction();
     compensations.add(sagaStep.getCompensator());
     long actionStart = System.currentTimeMillis();
@@ -102,9 +107,9 @@ public class DefaultSagaTransactor implements SagaTransactor {
         }
       } catch (Throwable tc) {
         evaluations.add(Evaluation.compensation(compensation, System.currentTimeMillis() - compensationStart, false));
-        return EvaluationResult.failed(new SagaCompensationFailedException(compensation, sagaName, tc));
+        return EvaluationResult.failed(new SagaCompensationFailedException(compensation, sagaId, tc));
       }
-      return EvaluationResult.failed(new SagaActionFailedException(sagaStep.getAction().getName(), sagaName, ta));
+      return EvaluationResult.failed(new SagaActionFailedException(sagaStep.getAction().getName(), sagaId, ta));
     }
   }
 }

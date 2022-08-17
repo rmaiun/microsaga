@@ -104,7 +104,7 @@ public class CreateOrderHelper {
 
   private void logSaga(EvaluationHistory evaluationHistory) {
     for (Evaluation e : evaluationHistory.getEvaluations()) {
-      LOG.info("SAGA:{} [{}:{}] {} {}(ms)", evaluationHistory.getSagaName(), e.getEvaluationType().name().toLowerCase(), e.isSuccess() ? "success" : "failed", e.getName(), e.getDuration());
+      LOG.info("SAGA:{} [{}:{}] {} {}(ms)", evaluationHistory.getSagaId(), e.getEvaluationType().name().toLowerCase(), e.isSuccess() ? "success" : "failed", e.getName(), e.getDuration());
     }
   }
 }
