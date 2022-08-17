@@ -13,7 +13,7 @@ Contains one and only dependency to [failsafe](https://github.com/failsafe-lib/f
 # Usage
 
 Add dependency to your project with `gradle`:  
-`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '0.3.0'`  
+`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '0.4.0'`  
 or you can use another build tools.  
 Actual version also could be checked at [mvnrepository.com](https://mvnrepository.com/artifact/io.github.rmaiun/microsaga)
 
