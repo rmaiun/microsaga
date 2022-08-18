@@ -8,14 +8,17 @@ import io.github.rmaiun.microsaga.saga.SagaAction;
 import io.github.rmaiun.microsaga.saga.SagaFlatMap;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.saga.SagaSuccess;
+import io.github.rmaiun.microsaga.saga.SagaTransformedFlatMap;
 import io.github.rmaiun.microsaga.support.Evaluation;
 import io.github.rmaiun.microsaga.support.EvaluationHistory;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
+import io.github.rmaiun.microsaga.support.FunctionContext;
 import io.github.rmaiun.microsaga.support.SagaCompensation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.jodah.failsafe.Failsafe;
 
@@ -49,14 +52,16 @@ public class DefaultSagaTransactor implements SagaTransactor {
   @SuppressWarnings("unchecked")
   public <X> EvaluationResult<X> run(String sagaId, Saga<X> sagaInput) {
     Stack<SagaCompensation> compensations = new Stack<>();
-    Stack<Function<Object, Saga<Object>>> functions = new Stack<>();
+    Stack<FunctionContext> sagaDefinitions = new Stack<>();
     List<Evaluation> evaluations = new ArrayList<>();
     Function<Object, Saga<Object>> sagaInputFunc = (StubInputFunction<Saga<Object>>) o -> (Saga<Object>) sagaInput;
-    functions.add(sagaInputFunc);
+    sagaDefinitions.add(new FunctionContext(sagaInputFunc));
     EvaluationResult<Object> current = EvaluationResult.failed(new IllegalArgumentException("Empty saga defined"));
     boolean noError = true;
-    while (!functions.empty() && noError) {
-      Function<Object, Saga<Object>> f = functions.pop();
+    while (!sagaDefinitions.empty() && noError) {
+      FunctionContext ctx = sagaDefinitions.pop();
+      BiFunction<Object, Object, Object> transformer = ctx.getTransformer();
+      Function<Object, Saga<Object>> f = ctx.getSagaFunction();
       Saga<Object> saga = f instanceof StubInputFunction
           ? f.apply(null)
           : f.apply(current.getValue());
@@ -65,16 +70,20 @@ public class DefaultSagaTransactor implements SagaTransactor {
         noError = !current.isError();
       } else if (saga instanceof SagaAction) {
         SagaAction<Object> a = (SagaAction<Object>) saga;
-        current = evaluateStep(sagaId, a.withoutCompensation(), compensations, evaluations);
+        current = evaluateStep(sagaId, current.getValue(), a.withoutCompensation(), compensations, evaluations, transformer);
         noError = !current.isError();
       } else if (saga instanceof SagaStep) {
         SagaStep<Object> sagaStep = (SagaStep<Object>) saga;
-        current = evaluateStep(sagaId, sagaStep, compensations, evaluations);
+        current = evaluateStep(sagaId, current.getValue(), sagaStep, compensations, evaluations, transformer);
         noError = !current.isError();
+      } else if (saga instanceof SagaTransformedFlatMap) {
+        SagaTransformedFlatMap<Object, Object, Object> sagaFlatMap = (SagaTransformedFlatMap<Object, Object, Object>) saga;
+        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getfB(), sagaFlatMap.getTransformer()));
+        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getA()));
       } else if (saga instanceof SagaFlatMap) {
         SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
-        functions.add(sagaFlatMap.getfB());
-        functions.add(sagaFlatMap.getA());
+        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getfB()));
+        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getA()));
       } else {
         current = EvaluationResult.failed(new IllegalArgumentException("Invalid Saga Operation"));
         noError = !current.isError();
@@ -83,14 +92,18 @@ public class DefaultSagaTransactor implements SagaTransactor {
     return new EvaluationResult<>((X) current.getValue(), new EvaluationHistory(sagaId, evaluations), current.getError());
   }
 
-  private EvaluationResult<Object> evaluateStep(String sagaId, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations, List<Evaluation> evaluations) {
+  private EvaluationResult<Object> evaluateStep(String sagaId, Object prevValue, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations, List<Evaluation> evaluations,
+      BiFunction<Object, Object, Object> transformer) {
     Callable<Object> action = sagaStep.getAction().getAction();
     compensations.add(sagaStep.getCompensator());
     long actionStart = System.currentTimeMillis();
     try {
       Object callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
       evaluations.add(Evaluation.action(sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart, true));
-      return EvaluationResult.success(callResult);
+      Object finalResult = transformer == null
+          ? callResult
+          : transformer.apply(prevValue, callResult);
+      return EvaluationResult.success(finalResult);
     } catch (Throwable ta) {
       evaluations.add(Evaluation.action(sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart, false));
       long compensationStart = System.currentTimeMillis();

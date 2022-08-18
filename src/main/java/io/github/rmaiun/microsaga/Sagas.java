@@ -4,9 +4,11 @@ import io.github.rmaiun.microsaga.saga.Saga;
 import io.github.rmaiun.microsaga.saga.SagaAction;
 import io.github.rmaiun.microsaga.saga.SagaFlatMap;
 import io.github.rmaiun.microsaga.saga.SagaSuccess;
+import io.github.rmaiun.microsaga.saga.SagaTransformedFlatMap;
 import io.github.rmaiun.microsaga.support.NoResult;
 import io.github.rmaiun.microsaga.support.SagaCompensation;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.jodah.failsafe.RetryPolicy;
 
@@ -45,5 +47,9 @@ public class Sagas {
 
   public static <A, B> Saga<B> flatMap(Saga<A> a, Function<A, Saga<B>> fB) {
     return new SagaFlatMap<>(a, fB);
+  }
+
+  public static <A, B, C> Saga<B> zipWith(Saga<A> a, Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
+    return new SagaTransformedFlatMap<>(a, fB, transformer);
   }
 }
