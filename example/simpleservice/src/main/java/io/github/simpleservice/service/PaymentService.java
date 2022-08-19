@@ -11,10 +11,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.transaction.Transactional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentService {
+  public static final Logger LOG = LogManager.getLogger(PaymentService.class);
 
   private final AccountRepository accountRepository;
   private final PaymentRepository paymentRepository;
@@ -26,6 +29,7 @@ public class PaymentService {
 
   @Transactional
   public PaymentProcessedDto processPayment(ProcessPaymentDto dto, String city) {
+    LOG.info("Calling PaymentService.processPayment");
     var acc1 = accountRepository.findByCode(dto.from())
         .orElseThrow(() -> new RuntimeException(String.format(" account %s is not found", dto.from())));
     var acc2 = accountRepository.findByCode(dto.to())
@@ -42,7 +46,7 @@ public class PaymentService {
       payment.setSagaId(dto.sagaId());
       payment.setOrderId(dto.orderId());
       paymentRepository.save(payment);
-      return new PaymentProcessedDto(city, ZonedDateTime.now());
+      return new PaymentProcessedDto(city, ZonedDateTime.now(), dto.from());
     } else {
       throw new RuntimeException(String.format("User %s can't pay %d money because he has only %d on his account",
           acc1.getCode(), dto.money(), acc1.getAmount()));
@@ -51,6 +55,7 @@ public class PaymentService {
 
   @Transactional
   public void cancelPayment(String sagaId) {
+    LOG.info("Calling PaymentService.cancelPayment");
     var accounts = StreamSupport.stream(accountRepository.findAll().spliterator(), false)
         .collect(Collectors.toMap(Account::getId, Function.identity()));
     var payments = paymentRepository.findAllBySagaId(sagaId);

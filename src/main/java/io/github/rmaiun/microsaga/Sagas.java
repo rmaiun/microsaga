@@ -49,7 +49,7 @@ public class Sagas {
     return new SagaFlatMap<>(a, fB);
   }
 
-  public static <A, B, C> Saga<B> zipWith(Saga<A> a, Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
+  public static <A, B, C> Saga<B> transformFlatMap(Saga<A> a, Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
     return new SagaTransformedFlatMap<>(a, fB, transformer);
   }
 }

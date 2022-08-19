@@ -1,6 +1,7 @@
 package io.github.rmaiun.microsaga.saga;
 
 import io.github.rmaiun.microsaga.Sagas;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class Saga<A> {
@@ -16,4 +17,9 @@ public abstract class Saga<A> {
   public <B> Saga<B> then(Saga<B> b) {
     return Sagas.flatMap(this, a -> b);
   }
+
+  public <B, C> Saga<B> zipWith(Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
+    return new SagaTransformedFlatMap<>(this, fB, transformer);
+  }
+
 }

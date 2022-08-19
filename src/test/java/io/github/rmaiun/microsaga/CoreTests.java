@@ -13,6 +13,7 @@ import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 public class CoreTests {
@@ -110,5 +111,20 @@ public class CoreTests {
     assertTrue(result.isSuccess());
     assertNotNull(result.getValue());
     assertEquals("int=3", result.getValue());
+  }
+
+  @Test
+  public void zipWithTest() {
+    AtomicInteger x = new AtomicInteger();
+    SagaStep<Integer> incrementStep = Sagas.action("initValue", x::incrementAndGet)
+        .withoutCompensation();
+    Saga<String> intToString = incrementStep
+        .zipWith(a -> Sagas.action("intToString", () -> String.format("int=%d", a)).withoutCompensation(), (a,b) -> a)
+        .flatmap(x -> );
+    EvaluationResult<String> result = SagaManager.use(intToString).transact();
+    assertNotNull(result);
+    assertTrue(result.isSuccess());
+    assertNotNull(result.getValue());
+    assertEquals("int=1", result.getValue());
   }
 }
