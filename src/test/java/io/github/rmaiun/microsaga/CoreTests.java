@@ -118,13 +118,11 @@ public class CoreTests {
     AtomicInteger x = new AtomicInteger();
     SagaStep<Integer> incrementStep = Sagas.action("initValue", x::incrementAndGet)
         .withoutCompensation();
-    Saga<String> intToString = incrementStep
+    Saga<Integer> intToString = incrementStep
         .zipWith(a -> Sagas.action("intToString", () -> String.format("int=%d", a)).withoutCompensation(), (a,b) -> a)
-        .flatmap(x -> );
-    EvaluationResult<String> result = SagaManager.use(intToString).transact();
+        .flatmap(a -> Sagas.action("+3", () -> a+3).withoutCompensation());
+    Integer result = SagaManager.use(intToString).transact().valueOrThrow();
     assertNotNull(result);
-    assertTrue(result.isSuccess());
-    assertNotNull(result.getValue());
-    assertEquals("int=1", result.getValue());
+    assertEquals(4, result);
   }
 }

@@ -18,8 +18,8 @@ public abstract class Saga<A> {
     return Sagas.flatMap(this, a -> b);
   }
 
-  public <B, C> Function<A, Saga<C>> zipWith(Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
-    return (A a) -> new SagaFlatMap<>(this, fB).map(res -> transformer.apply(a,res));
+  public <B, C> Saga<C> zipWith(Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
+    return new SagaTransformedFlatMap<>(x -> this, fB, transformer);
   }
 
 }
