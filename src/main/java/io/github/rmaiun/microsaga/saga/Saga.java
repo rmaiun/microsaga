@@ -21,5 +21,8 @@ public abstract class Saga<A> {
   public <B, C> Saga<C> zipWith(Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
     return new SagaTransformedFlatMap<>(x -> this, fB, transformer);
   }
+  public <B, C> Saga<C> zipWith(Saga<B> b, Function< B, C> transformer) {
+    return new SagaTransformedFlatMap<>(x -> this, a -> b, (in,out) -> transformer.apply(out));
+  }
 
 }
