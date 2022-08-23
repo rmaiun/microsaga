@@ -11,6 +11,8 @@ import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
 import io.github.rmaiun.microsaga.saga.Saga;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -136,5 +138,24 @@ public class CoreTests {
     String result = SagaManager.use(intToString).transact().valueOrThrow();
     assertNotNull(result);
     assertEquals("int=14153", result);
+  }
+
+  @Test
+  public void evaluationResultFlatTapTest() {
+    List<Integer> list = new ArrayList<>();
+    AtomicInteger x = new AtomicInteger();
+    SagaStep<Integer> incrementStep = Sagas.action("initValue", x::incrementAndGet)
+        .withoutCompensation();
+    Saga<String> intToString = incrementStep
+        .zipWith(Sagas.action("intToString", () -> String.format("int=%d", 14)).withoutCompensation(), a -> a + 15)
+        .flatmap(a -> Sagas.action("+3", () -> a + 3).withoutCompensation());
+    String result = SagaManager.use(intToString).transact()
+        .flatTap(er -> list.add(er.getEvaluationHistory().getEvaluations().size()))
+        .valueOrThrow();
+    assertNotNull(result);
+    assertEquals("int=14153", result);
+    assertNotNull(list);
+    assertNotNull(list.get(0));
+    assertEquals(3, list.get(0));
   }
 }
