@@ -1,5 +1,6 @@
 package io.github.rmaiun.microsaga.support;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class EvaluationResult<A> {
@@ -60,5 +61,10 @@ public class EvaluationResult<A> {
       throw errorTransformer.apply(getError());
     }
     return getValue();
+  }
+
+  public EvaluationResult<A> flatTap(Consumer<EvaluationResult<A>> consumer) {
+    consumer.accept(this);
+    return this;
   }
 }

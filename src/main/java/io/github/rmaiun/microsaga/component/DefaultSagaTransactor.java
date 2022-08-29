@@ -77,9 +77,9 @@ public class DefaultSagaTransactor implements SagaTransactor {
         current = evaluateStep(sagaId, current.getValue(), sagaStep, compensations, evaluations, transformer);
         noError = !current.isError();
       } else if (saga instanceof SagaTransformedFlatMap) {
-        SagaTransformedFlatMap<Object, Object, Object> sagaFlatMap = (SagaTransformedFlatMap<Object, Object, Object>) saga;
-        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getfB(), sagaFlatMap.getTransformer()));
-        sagaDefinitions.add(new FunctionContext(sagaFlatMap.getA()));
+        SagaTransformedFlatMap<Object, Object, Object> sagaTransFlatMap = (SagaTransformedFlatMap<Object, Object, Object>) saga;
+        sagaDefinitions.add(new FunctionContext(sagaTransFlatMap.getSagaFunc(), sagaTransFlatMap.getTransformer()));
+        sagaDefinitions.add(new FunctionContext(sagaTransFlatMap.getRootSaga()));
       } else if (saga instanceof SagaFlatMap) {
         SagaFlatMap<Object, Object> sagaFlatMap = (SagaFlatMap<Object, Object>) saga;
         sagaDefinitions.add(new FunctionContext(sagaFlatMap.getfB()));

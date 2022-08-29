@@ -48,8 +48,4 @@ public class Sagas {
   public static <A, B> Saga<B> flatMap(Saga<A> a, Function<A, Saga<B>> fB) {
     return new SagaFlatMap<>(a, fB);
   }
-
-  public static <A, B, C> Saga<B> transformFlatMap(Saga<A> a, Function<A, Saga<B>> fB, BiFunction<A, B, C> transformer) {
-    return new SagaTransformedFlatMap<>(a, fB, transformer);
-  }
 }

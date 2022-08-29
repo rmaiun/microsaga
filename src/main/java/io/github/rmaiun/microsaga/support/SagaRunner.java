@@ -1,6 +1,5 @@
 package io.github.rmaiun.microsaga.support;
 
-import io.github.rmaiun.microsaga.component.DefaultSagaTransactor;
 import io.github.rmaiun.microsaga.component.SagaTransactor;
 import io.github.rmaiun.microsaga.saga.Saga;
 import java.util.UUID;
@@ -17,15 +16,15 @@ public class SagaRunner<A> {
   }
 
   public EvaluationResult<A> transact() {
-    return new DefaultSagaTransactor().transact(id, saga);
+    return sagaTransactor.transact(id, saga);
   }
 
   public A transactOrThrow() {
-    return new DefaultSagaTransactor().transactOrThrow(id, saga);
+    return sagaTransactor.transactOrThrow(id, saga);
   }
 
   public <E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    return new DefaultSagaTransactor().transactOrThrow(id, saga, errorTransformer);
+    return sagaTransactor.transactOrThrow(id, saga, errorTransformer);
   }
 
 
