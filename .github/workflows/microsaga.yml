@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         java: [ 8 ]
-        jdk: [ 'adopt', 'temurin', 'zulu', 'corretto' ]
+        jdk: [ 'adopt' ]
     name: Java ${{ matrix.java }} ${{ matrix.jdk }}
     steps:
       - uses: actions/checkout@v3
@@ -14,7 +14,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.java }}
-          distribution:  ${{ matrix.jdk }}
+          distribution: ${{ matrix.jdk }}
       - name: Make mvn executable
         run: chmod +x ./mvnw
       - name: Build with Maven
