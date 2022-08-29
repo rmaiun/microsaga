@@ -11,7 +11,7 @@ import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class CreateOrderHelperTests {
+public class CreateOrderHelperTest {
 
   public static final String IPHONE_X = "Iphone X";
   public static final int DEFAULT_PRICE = 1000;

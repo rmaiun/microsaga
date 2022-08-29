@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
-public class CoreTests {
+public class CoreTest {
 
   @Test
   public void flatmapTest() {
