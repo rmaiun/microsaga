@@ -124,6 +124,6 @@ As it was mentioned above, saga steps are composable, so it is possible to write
 
 [Badge-Codecov]: https://codecov.io/gh/rmaiun/microsaga/branch/main/graph/badge.svg "Codecov"
 
-[Badge-GHA]: https://github.com/rmaiun/microsaga/actions/workflows/microsaga.yml/badge.svg "Codecov"
+[Badge-GHA]: https://github.com/rmaiun/microsaga/actions/workflows/microsaga.yml/badge.svg "Github actions"
 
 [Badge-SonatypeReleases]: https://img.shields.io/badge/release-0.4.0-blueviolet "Sonatype Releases"
