@@ -114,7 +114,7 @@ public class DefaultSagaTransactor implements SagaTransactor {
           if (!pop.isTechnical()) {
             compensationStart = System.currentTimeMillis();
             compensation = pop.getName();
-            Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().run());
+            Failsafe.with(pop.getRetryPolicy()).run(() -> pop.getCompensation().accept(sagaId));
             evaluations.add(Evaluation.compensation(compensation, System.currentTimeMillis() - compensationStart, true));
           }
         }
