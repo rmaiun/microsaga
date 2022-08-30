@@ -1,16 +1,24 @@
 package io.github.rmaiun.microsaga.support;
 
 
+import java.util.function.Consumer;
 import net.jodah.failsafe.RetryPolicy;
 
 public class SagaCompensation {
 
   private final String name;
-  private final Runnable compensation;
+  private final Consumer<String> compensation;
   private final RetryPolicy<Object> retryPolicy;
   private final boolean technical;
 
   public SagaCompensation(String name, Runnable compensation, RetryPolicy<Object> retryPolicy) {
+    this.name = name;
+    this.compensation = sagaId -> compensation.run();
+    this.retryPolicy = retryPolicy;
+    this.technical = false;
+  }
+
+  public SagaCompensation(String name, Consumer<String> compensation, RetryPolicy<Object> retryPolicy) {
     this.name = name;
     this.compensation = compensation;
     this.retryPolicy = retryPolicy;
@@ -19,7 +27,8 @@ public class SagaCompensation {
 
   public SagaCompensation(String name, Runnable compensation, RetryPolicy<Object> retryPolicy, boolean technical) {
     this.name = name;
-    this.compensation = compensation;
+    this.compensation = sagaId -> compensation.run();
+    ;
     this.retryPolicy = retryPolicy;
     this.technical = technical;
   }
@@ -33,7 +42,7 @@ public class SagaCompensation {
     return name;
   }
 
-  public Runnable getCompensation() {
+  public Consumer<String> getCompensation() {
     return compensation;
   }
 
