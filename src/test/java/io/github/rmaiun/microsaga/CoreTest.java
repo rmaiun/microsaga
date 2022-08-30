@@ -11,10 +11,12 @@ import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
 import io.github.rmaiun.microsaga.saga.Saga;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
+import io.github.rmaiun.microsaga.support.NoResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 public class CoreTest {
@@ -157,5 +159,17 @@ public class CoreTest {
     assertNotNull(list);
     assertNotNull(list.get(0));
     assertEquals(3, list.get(0));
+  }
+
+  @Test
+  public void voidActionTest() {
+    AtomicReference<String> ref = new AtomicReference<>();
+    SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
+          throw new RuntimeException("action#1 failed");
+        })
+        .compensate("compensation#1", ref::set);
+    EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
+    assertNotNull(evaluationResult);
+    assertEquals(evaluationResult.getEvaluationHistory().getSagaId(), ref.get());
   }
 }
