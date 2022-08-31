@@ -10,7 +10,6 @@ public class DeliveryService {
 
   private static final Logger LOG = LogManager.getLogger(DeliveryService.class);
 
-
   public NoResult registerDelivery(String person) {
     LOG.info("Hello, {}! Your delivery will be on place at {}", person, ZonedDateTime.now(ZoneOffset.UTC));
     return NoResult.instance();

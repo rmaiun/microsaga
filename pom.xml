@@ -169,6 +169,27 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.25.0</version>
+        <configuration>
+          <java>
+            <eclipse>
+              <version>4.13.0</version>
+              <file>${project.basedir}/eclipse-formatter.xml</file>
+            </eclipse>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>apply</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

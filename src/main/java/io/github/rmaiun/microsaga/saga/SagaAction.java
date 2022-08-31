@@ -1,6 +1,5 @@
 package io.github.rmaiun.microsaga.saga;
 
-
 import io.github.rmaiun.microsaga.support.SagaCompensation;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -37,7 +36,6 @@ public class SagaAction<A> extends Saga<A> {
   public SagaStep<A> compensate(String name, Consumer<String> compensation, RetryPolicy<Object> retryPolicy) {
     return new SagaStep<>(this, new SagaCompensation(name, compensation, retryPolicy));
   }
-
 
   public SagaStep<A> withoutCompensation() {
     return new SagaStep<>(this, SagaCompensation.technical());

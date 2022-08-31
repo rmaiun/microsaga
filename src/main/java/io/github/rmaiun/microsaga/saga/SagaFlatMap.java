@@ -1,6 +1,5 @@
 package io.github.rmaiun.microsaga.saga;
 
-
 import io.github.rmaiun.microsaga.func.StubInputFunction;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -12,7 +11,7 @@ public class SagaFlatMap<A, B> extends Saga<B> {
 
   public SagaFlatMap(Saga<A> a, Function<A, Saga<B>> fB) {
     this.a = x -> a;
-    this.fB = fB ;
+    this.fB = fB;
   }
 
   public StubInputFunction<Saga<A>> getA() {

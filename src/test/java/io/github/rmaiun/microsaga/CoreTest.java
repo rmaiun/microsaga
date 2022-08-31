@@ -27,7 +27,8 @@ public class CoreTest {
     SagaStep<Integer> incrementStep = Sagas.action("initValue", x::incrementAndGet)
         .withoutCompensation();
 
-    Saga<String> intToString = incrementStep.flatmap(a -> Sagas.action("intToString", () -> String.format("int=%d", a)).withoutCompensation());
+    Saga<String> intToString = incrementStep
+        .flatmap(a -> Sagas.action("intToString", () -> String.format("int=%d", a)).withoutCompensation());
     EvaluationResult<String> result = SagaManager.use(intToString).transact();
     assertNotNull(result);
     assertTrue(result.isSuccess());
@@ -86,9 +87,8 @@ public class CoreTest {
     };
     SagaStep<Integer> incrementStep = Sagas.action("initValue", throwError)
         .compensate("setAtomicIntToZero", () -> {
-              throw new RuntimeException("something wrong");
-            }
-        );
+          throw new RuntimeException("something wrong");
+        });
 
     Saga<Integer> intToString = incrementStep
         .flatmap(a -> Sagas.action("intToString", () -> String.format("int=%d", a)).withoutCompensation())
@@ -165,8 +165,8 @@ public class CoreTest {
   public void voidActionTest() {
     AtomicReference<String> ref = new AtomicReference<>();
     SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
-          throw new RuntimeException("action#1 failed");
-        })
+      throw new RuntimeException("action#1 failed");
+    })
         .compensate("compensation#1", ref::set);
     EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
     assertNotNull(evaluationResult);
