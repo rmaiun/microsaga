@@ -1,6 +1,5 @@
 package io.github.rmaiun.microsaga.support;
 
-
 import java.util.function.Consumer;
 import net.jodah.failsafe.RetryPolicy;
 

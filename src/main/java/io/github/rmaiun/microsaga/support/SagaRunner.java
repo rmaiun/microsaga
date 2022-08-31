@@ -27,7 +27,6 @@ public class SagaRunner<A> {
     return sagaTransactor.transactOrThrow(id, saga, errorTransformer);
   }
 
-
   public SagaRunner<A> withName(String name) {
     this.id = name;
     return this;

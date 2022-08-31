@@ -7,7 +7,6 @@ public class BusinessLogger {
 
   private static final Logger LOG = LogManager.getLogger(BusinessLogger.class);
 
-
   public void createBusinessLog(String msg) {
     LOG.info(msg);
   }

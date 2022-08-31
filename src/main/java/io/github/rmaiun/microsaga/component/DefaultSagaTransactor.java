@@ -48,7 +48,6 @@ public class DefaultSagaTransactor implements SagaTransactor {
     return result.getValue();
   }
 
-
   @SuppressWarnings("unchecked")
   public <X> EvaluationResult<X> run(String sagaId, Saga<X> sagaInput) {
     Stack<SagaCompensation> compensations = new Stack<>();
@@ -92,7 +91,8 @@ public class DefaultSagaTransactor implements SagaTransactor {
     return new EvaluationResult<>((X) current.getValue(), new EvaluationHistory(sagaId, evaluations), current.getError());
   }
 
-  private EvaluationResult<Object> evaluateStep(String sagaId, Object prevValue, SagaStep<Object> sagaStep, Stack<SagaCompensation> compensations, List<Evaluation> evaluations,
+  private EvaluationResult<Object> evaluateStep(String sagaId, Object prevValue, SagaStep<Object> sagaStep,
+      Stack<SagaCompensation> compensations, List<Evaluation> evaluations,
       BiFunction<Object, Object, Object> transformer) {
     Callable<Object> action = sagaStep.getAction().getAction();
     compensations.add(sagaStep.getCompensator());

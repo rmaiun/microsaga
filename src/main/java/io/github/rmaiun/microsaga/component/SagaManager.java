@@ -1,6 +1,5 @@
 package io.github.rmaiun.microsaga.component;
 
-
 import io.github.rmaiun.microsaga.saga.Saga;
 import io.github.rmaiun.microsaga.support.SagaRunner;
 
@@ -15,7 +14,6 @@ public class SagaManager {
   public SagaManager(SagaTransactor sagaTransactor) {
     this.sagaTransactor = sagaTransactor;
   }
-
 
   public static <A> SagaRunner<A> use(Saga<A> saga, SagaTransactor sagaTransactor) {
     SagaRunner<A> sagaRunner = new SagaRunner<>(sagaTransactor);

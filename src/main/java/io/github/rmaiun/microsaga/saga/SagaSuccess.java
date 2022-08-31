@@ -1,7 +1,5 @@
 package io.github.rmaiun.microsaga.saga;
 
-
-
 public class SagaSuccess<T> extends Saga<T> {
 
   private final T value;
