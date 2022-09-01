@@ -2,6 +2,7 @@ package io.github.rmaiun.microsaga.component;
 
 import io.github.rmaiun.microsaga.exception.SagaActionFailedException;
 import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
+import io.github.rmaiun.microsaga.func.CheckedFunction;
 import io.github.rmaiun.microsaga.func.StubInputFunction;
 import io.github.rmaiun.microsaga.saga.Saga;
 import io.github.rmaiun.microsaga.saga.SagaAction;
@@ -17,7 +18,6 @@ import io.github.rmaiun.microsaga.support.SagaCompensation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.jodah.failsafe.Failsafe;
@@ -94,11 +94,11 @@ public class DefaultSagaTransactor implements SagaTransactor {
   private EvaluationResult<Object> evaluateStep(String sagaId, Object prevValue, SagaStep<Object> sagaStep,
       Stack<SagaCompensation> compensations, List<Evaluation> evaluations,
       BiFunction<Object, Object, Object> transformer) {
-    Callable<Object> action = sagaStep.getAction().getAction();
+    CheckedFunction<String, Object> action = sagaStep.getAction().getAction();
     compensations.add(sagaStep.getCompensator());
     long actionStart = System.currentTimeMillis();
     try {
-      Object callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(action::call);
+      Object callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(() -> action.apply(sagaId));
       evaluations.add(Evaluation.action(sagaStep.getAction().getName(), System.currentTimeMillis() - actionStart, true));
       Object finalResult = transformer == null
           ? callResult

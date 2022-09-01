@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import net.jodah.failsafe.RetryPolicy;
 import org.junit.jupiter.api.Test;
 
 public class CoreTest {
@@ -165,11 +166,49 @@ public class CoreTest {
   public void voidActionTest() {
     AtomicReference<String> ref = new AtomicReference<>();
     SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
-      throw new RuntimeException("action#1 failed");
-    })
+          throw new RuntimeException("action#1 failed");
+        })
         .compensate("compensation#1", ref::set);
     EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
     assertNotNull(evaluationResult);
     assertEquals(evaluationResult.getEvaluationHistory().getSagaId(), ref.get());
+  }
+
+  @Test
+  public void voidRetriableActionTest() {
+    AtomicInteger ref = new AtomicInteger(0);
+    SagaStep<NoResult> saga = Sagas.voidRetryableAction("action#1", () -> {
+          ref.incrementAndGet();
+          throw new RuntimeException("action#1 failed");
+        }, new RetryPolicy<NoResult>().withMaxRetries(2))
+        .compensate("compensation#1", ref::decrementAndGet);
+    EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
+    assertNotNull(evaluationResult);
+    assertTrue(evaluationResult.isError());
+    assertEquals(2, ref.get());
+  }
+
+  @Test
+  public void actionConsumesSagaIdTest() {
+    AtomicReference<String> ref = new AtomicReference<>();
+    Saga<NoResult> saga = Sagas.voidAction("a1", ref::set)
+        .withoutCompensation();
+    EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
+    assertNotNull(evaluationResult);
+    assertTrue(evaluationResult.isSuccess());
+    assertEquals(evaluationResult.getEvaluationHistory().getSagaId(), ref.get());
+  }
+
+  @Test
+  public void repeatableCompensationConsumesSagaIdTest() {
+    AtomicReference<String> ref = new AtomicReference<>("");
+    SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
+          throw new RuntimeException("action#1 failed");
+        })
+        .compensate("compensation#1", ref::set, new RetryPolicy<>().withMaxRetries(2));
+    EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
+    assertNotNull(evaluationResult);
+    String sagaId = evaluationResult.getEvaluationHistory().getSagaId();
+    assertEquals(sagaId, ref.get());
   }
 }
