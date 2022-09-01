@@ -19,7 +19,7 @@ Contains one and only dependency to [failsafe](https://github.com/failsafe-lib/f
 # Usage
 
 Add dependency to your project with `gradle`:  
-`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '0.4.0'`  
+`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '1.0.0-RC2'`  
 or you can use another build tools.  
 Actual version also could be checked at [mvnrepository.com](https://mvnrepository.com/artifact/io.github.rmaiun/microsaga)
 
@@ -47,10 +47,11 @@ Action can have a compensation, which can be also created using `Sagas` class:
 
 ```java
     SagaCompensation removeUserCompensation=Sagas.compensation("removeUserFromDb",
-    ()->userService.deleteUserByCriteria())
+    ()->userService.deleteUserByCriteria());
     // or using retry policy
     SagaCompensation removeUserCompensation=Sagas.retryableCompensation("removeUserFromDb",
-    ()->userService.deleteUserByCriteria(),new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
+    ()->userService.deleteUserByCriteria(),
+    new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
 ```  
 
 The main difference here is that action is `Callable<A>` because next action can be dependent on result of previous one.
@@ -126,4 +127,4 @@ As it was mentioned above, saga steps are composable, so it is possible to write
 
 [Badge-GHA]: https://github.com/rmaiun/microsaga/actions/workflows/microsaga.yml/badge.svg "Github actions"
 
-[Badge-SonatypeReleases]: https://img.shields.io/badge/release-0.4.0-blueviolet "Sonatype Releases"
+[Badge-SonatypeReleases]: https://img.shields.io/badge/release-1.0.0--RC2-blueviolet "Sonatype Releases"
