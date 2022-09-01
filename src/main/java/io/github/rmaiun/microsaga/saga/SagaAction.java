@@ -1,17 +1,20 @@
 package io.github.rmaiun.microsaga.saga;
 
+import io.github.rmaiun.microsaga.func.CheckedFunction;
 import io.github.rmaiun.microsaga.support.SagaCompensation;
+import io.github.rmaiun.microsaga.util.SagaUtils;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import net.jodah.failsafe.RetryPolicy;
 
 public class SagaAction<A> extends Saga<A> {
 
   private final String name;
   private final RetryPolicy<A> retryPolicy;
-  private final Callable<A> action;
+  private final CheckedFunction<String, A> action;
 
-  public SagaAction(String name, Callable<A> action, RetryPolicy<A> retryPolicy) {
+  public SagaAction(String name, CheckedFunction<String, A> action, RetryPolicy<A> retryPolicy) {
     this.name = name;
     this.action = action;
     this.retryPolicy = retryPolicy;
@@ -22,7 +25,7 @@ public class SagaAction<A> extends Saga<A> {
   }
 
   public SagaStep<A> compensate(String name, Runnable compensation) {
-    return new SagaStep<>(this, new SagaCompensation(name, compensation, new RetryPolicy<>().withMaxRetries(0)));
+    return new SagaStep<>(this, new SagaCompensation(name, compensation, SagaUtils.defaultRetryPolicy()));
   }
 
   public SagaStep<A> compensate(String name, Runnable compensation, RetryPolicy<Object> retryPolicy) {
@@ -30,7 +33,7 @@ public class SagaAction<A> extends Saga<A> {
   }
 
   public SagaStep<A> compensate(String name, Consumer<String> compensation) {
-    return new SagaStep<>(this, new SagaCompensation(name, compensation, new RetryPolicy<>().withMaxRetries(0)));
+    return new SagaStep<>(this, new SagaCompensation(name, compensation, SagaUtils.defaultRetryPolicy()));
   }
 
   public SagaStep<A> compensate(String name, Consumer<String> compensation, RetryPolicy<Object> retryPolicy) {
@@ -45,7 +48,7 @@ public class SagaAction<A> extends Saga<A> {
     return name;
   }
 
-  public Callable<A> getAction() {
+  public CheckedFunction<String, A> getAction() {
     return action;
   }
 

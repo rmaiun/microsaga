@@ -1,5 +1,6 @@
 package io.github.rmaiun.microsaga.support;
 
+import io.github.rmaiun.microsaga.util.SagaUtils;
 import java.util.function.Consumer;
 import net.jodah.failsafe.RetryPolicy;
 
@@ -34,7 +35,7 @@ public class SagaCompensation {
 
   public static SagaCompensation technical() {
     return new SagaCompensation("", () -> {
-    }, new RetryPolicy<>().withMaxRetries(0), true);
+    }, SagaUtils.defaultRetryPolicy(), true);
   }
 
   public String getName() {
