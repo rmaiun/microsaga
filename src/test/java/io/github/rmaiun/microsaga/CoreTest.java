@@ -166,8 +166,8 @@ public class CoreTest {
   public void voidActionTest() {
     AtomicReference<String> ref = new AtomicReference<>();
     SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
-      throw new RuntimeException("action#1 failed");
-    })
+          throw new RuntimeException("action#1 failed");
+        })
         .compensate("compensation#1", ref::set);
     EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
     assertNotNull(evaluationResult);
@@ -178,9 +178,9 @@ public class CoreTest {
   public void voidRetriableActionTest() {
     AtomicInteger ref = new AtomicInteger(0);
     SagaStep<NoResult> saga = Sagas.voidRetryableAction("action#1", () -> {
-      ref.incrementAndGet();
-      throw new RuntimeException("action#1 failed");
-    }, new RetryPolicy<NoResult>().withMaxRetries(2))
+          ref.incrementAndGet();
+          throw new RuntimeException("action#1 failed");
+        }, new RetryPolicy<NoResult>().withMaxRetries(2))
         .compensate("compensation#1", ref::decrementAndGet);
     EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
     assertNotNull(evaluationResult);
@@ -203,8 +203,8 @@ public class CoreTest {
   public void repeatableCompensationConsumesSagaIdTest() {
     AtomicReference<String> ref = new AtomicReference<>("");
     SagaStep<NoResult> saga = Sagas.voidAction("action#1", () -> {
-      throw new RuntimeException("action#1 failed");
-    })
+          throw new RuntimeException("action#1 failed");
+        })
         .compensate("compensation#1", ref::set, new RetryPolicy<>().withMaxRetries(2));
     EvaluationResult<NoResult> evaluationResult = SagaManager.use(saga).transact();
     assertNotNull(evaluationResult);
