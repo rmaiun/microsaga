@@ -63,7 +63,7 @@ public class EvaluationResult<A> {
     return getValue();
   }
 
-  public EvaluationResult<A> flatTap(Consumer<EvaluationResult<A>> consumer) {
+  public EvaluationResult<A> peek(Consumer<EvaluationResult<A>> consumer) {
     consumer.accept(this);
     return this;
   }
