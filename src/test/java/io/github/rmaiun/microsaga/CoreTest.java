@@ -153,7 +153,7 @@ public class CoreTest {
         .zipWith(Sagas.action("intToString", () -> String.format("int=%d", 14)).withoutCompensation(), a -> a + 15)
         .flatmap(a -> Sagas.action("+3", () -> a + 3).withoutCompensation());
     String result = SagaManager.use(intToString).transact()
-        .flatTap(er -> list.add(er.getEvaluationHistory().getEvaluations().size()))
+        .peek(er -> list.add(er.getEvaluationHistory().getEvaluations().size()))
         .valueOrThrow();
     assertNotNull(result);
     assertEquals("int=14153", result);
