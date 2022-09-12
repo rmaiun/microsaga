@@ -6,7 +6,6 @@ import io.github.rmaiun.microsaga.support.NoResult;
 import io.github.simpleservice.dto.PaymentProcessedDto;
 import io.github.simpleservice.dto.PlanDeliveryDto;
 import io.github.simpleservice.service.DeliveryService;
-import java.util.concurrent.Callable;
 import net.jodah.failsafe.RetryPolicy;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +18,10 @@ public class DeliverySagaHelper {
     this.deliveryService = deliveryService;
   }
 
-  public SagaStep<NoResult> planDeliverySagaStep(PaymentProcessedDto dto) {
-    Callable<NoResult> action = () -> {
-      deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), dto.deliveryCity()));
-      return NoResult.instance();
-    };
-    return Sagas.retryableAction("planDelivery", action, new RetryPolicy<NoResult>().withMaxRetries(3))
+  public SagaStep<NoResult> planDeliverySagaStep(PaymentProcessedDto dto, String city) {
+    return Sagas.voidRetryableAction("planDelivery",
+        () -> deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), city)),
+        new RetryPolicy<NoResult>().withMaxRetries(3))
         .withoutCompensation();
   }
 }

@@ -10,8 +10,8 @@ import javax.persistence.Id;
 public class Payment {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private String id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
   @Column(name = "acc_from")
   private Long accFrom;
   @Column(name = "acc_to")
@@ -22,11 +22,11 @@ public class Payment {
   @Column(name = "saga_id")
   private String sagaId;
 
-  public String getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(Long id) {
     this.id = id;
   }
 

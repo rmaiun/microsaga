@@ -8,13 +8,13 @@ import java.time.ZonedDateTime;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
   public static final Logger LOG = LogManager.getLogger(OrderService.class);
 
   private final OrderRepository orderRepository;
-
 
   public OrderService(OrderRepository orderRepository) {
     this.orderRepository = orderRepository;
@@ -32,6 +32,7 @@ public class OrderService {
     return new OrderCreatedDto(result.getId(), 500L, dto.user(), timestamp);
   }
 
+  @Transactional
   public void cancelOrder(String sagaId) {
     LOG.info("Calling OrderService.cancelOrder");
     orderRepository.deleteAllBySagaId(sagaId);
