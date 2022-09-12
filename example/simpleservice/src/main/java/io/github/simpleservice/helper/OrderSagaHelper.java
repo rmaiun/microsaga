@@ -16,11 +16,10 @@ public class OrderSagaHelper {
     this.orderService = orderService;
   }
 
-  public SagaStep<OrderCreatedDto> createOrderSagaStep(String user, String sagaId, String product) {
-    var action = Sagas.action("cancelSaga",
-        () -> orderService.createOrder(new CreateOrderDto(user, product, sagaId)));
-    var compensation = Sagas.compensation("cancelOrder",
-        () -> orderService.cancelOrder(sagaId));
+  public SagaStep<OrderCreatedDto> createOrderSagaStep(String user, String product) {
+    var action = Sagas.action("createOrder",
+        sagaId -> orderService.createOrder(new CreateOrderDto(user, product, sagaId)));
+    var compensation = Sagas.compensation("cancelOrder", orderService::cancelOrder);
     return action.compensate(compensation);
   }
 }

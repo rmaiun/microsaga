@@ -12,7 +12,7 @@ public class SagaLogger {
   }
 
   public static void logSaga(EvaluationHistory eh) {
-    eh.getEvaluations().forEach(e -> LOG.info("{}:[{}] {} ({}) {}", eh.getSagaId(),
+    eh.getEvaluations().forEach(e -> LOG.info("SAGA:{}:[{}] {} ({}) {}", eh.getSagaId(),
         e.getEvaluationType().name().toLowerCase(), e.getName(), e.getDuration(), e.isSuccess() ? "✅" : "❌"));
   }
 }

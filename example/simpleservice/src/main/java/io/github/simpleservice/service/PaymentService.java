@@ -28,7 +28,7 @@ public class PaymentService {
   }
 
   @Transactional
-  public PaymentProcessedDto processPayment(ProcessPaymentDto dto, String city) {
+  public PaymentProcessedDto processPayment(ProcessPaymentDto dto) {
     LOG.info("Calling PaymentService.processPayment");
     var acc1 = accountRepository.findByCode(dto.from())
         .orElseThrow(() -> new RuntimeException(String.format(" account %s is not found", dto.from())));
@@ -46,7 +46,7 @@ public class PaymentService {
       payment.setSagaId(dto.sagaId());
       payment.setOrderId(dto.orderId());
       paymentRepository.save(payment);
-      return new PaymentProcessedDto(city, ZonedDateTime.now(), dto.from());
+      return new PaymentProcessedDto(ZonedDateTime.now(), dto.from());
     } else {
       throw new RuntimeException(String.format("User %s can't pay %d money because he has only %d on his account",
           acc1.getCode(), dto.money(), acc1.getAmount()));

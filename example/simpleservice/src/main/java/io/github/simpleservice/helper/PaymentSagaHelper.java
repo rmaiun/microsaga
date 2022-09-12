@@ -24,11 +24,11 @@ public class PaymentSagaHelper {
     this.paymentService = paymentService;
   }
 
-  public SagaStep<PaymentProcessedDto> processPaymentSagaStep(String sagaId, OrderCreatedDto dto, String city) {
+  public SagaStep<PaymentProcessedDto> processPaymentSagaStep(OrderCreatedDto dto) {
     var action = Sagas.action("processPayment",
-        () -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId), city));
+        sagaId -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId)));
     var compensation = Sagas.retryableCompensation("cancelPayment",
-        () -> paymentService.cancelPayment(sagaId), new RetryPolicy<>().withDelay(Duration.of(5L, ChronoUnit.SECONDS)));
+        paymentService::cancelPayment, new RetryPolicy<>().withDelay(Duration.of(5L, ChronoUnit.SECONDS)));
     return action.compensate(compensation);
   }
 }

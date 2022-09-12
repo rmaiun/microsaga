@@ -2,6 +2,6 @@ package io.github.simpleservice.dto;
 
 import java.time.ZonedDateTime;
 
-public record PaymentProcessedDto(String deliveryCity, ZonedDateTime timestamp, String payer) {
+public record PaymentProcessedDto(ZonedDateTime timestamp, String payer) {
 
 }
