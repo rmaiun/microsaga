@@ -142,4 +142,4 @@ Saga runner will use predefined sagaId and propagate it to all actions and compe
 
 [Badge-GHA]: https://github.com/rmaiun/microsaga/actions/workflows/microsaga.yml/badge.svg "Github actions"
 
-[Badge-SonatypeReleases]: https://img.shields.io/badge/release-1.0.0--RC3-blueviolet "Sonatype Releases"
+[Badge-SonatypeReleases]: https://img.shields.io/badge/release-1.0.0-blueviolet "Sonatype Releases"
