@@ -27,10 +27,10 @@ Actual version also could be checked at [mvnrepository.com](https://mvnrepositor
 
 ## Core Components
 
-To declare `Saga` we need to prepare 2 main parts:
+To declare `Saga` we need to have some saga steps. To create saga step, we need to prepare 2 main parts:
 
-- action
-- compensation
+- action, which is mandatory
+- compensation, which is optional
 
 Action represents the logical block, which is a part of long-running transaction.  
 It consists of name and `Callable<A>` action, which are mandatory attributes and optionally allows to describe `RetryPolicy<A>` retryPolicy.
