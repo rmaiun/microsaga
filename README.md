@@ -14,7 +14,8 @@ Saga pattern is just one tool in our belt for distributed or long-running transa
 Nevertheless, saga is a powerful mechanism and easy readable api can help to integrate this pattern into different projects.
 Microsaga library provides simple and readable api for saga actions and their compensations, giving possibility to declare sagas in composable way.
 Inspired by [cats-saga](https://github.com/VladKopanev/cats-saga).
-Contains one and only dependency to [failsafe](https://github.com/failsafe-lib/failsafe) which allows to use retry behavior in a flexible way.
+Contains one and only dependency to [failsafe](https://github.com/failsafe-lib/failsafe) which allows to use retry behavior in a flexible way.  
+Additional example of usage can be found in this article: [Saga management in Java with microsaga library](https://medium.com/p/dd146ca7d6a6).
 
 # Usage
 
@@ -121,7 +122,7 @@ As it was mentioned above, saga steps are composable, so it is possible to write
 
 ## Saga identification
 By default saga will use `UUID.randomUUID()` as sagaId. User can customize saga identification using
-`sagaManager.saga(someSaga).withName("cusomSagaId")` approach.  
+`sagaManager.saga(someSaga).withName("customSagaId")` approach.  
 However, there is possibility to pass sagaId implicitly to any action or compensation. To do this, need to use different api.  
 For example:
 ```java
