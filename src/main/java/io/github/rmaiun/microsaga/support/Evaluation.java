@@ -57,7 +57,8 @@ public class Evaluation<A> {
       return false;
     }
     Evaluation<?> that = (Evaluation<?>) o;
-    return duration == that.duration && success == that.success && Objects.equals(name, that.name) && evaluationType == that.evaluationType && Objects.equals(result, that.result);
+    return duration == that.duration && success == that.success && Objects.equals(name, that.name) && evaluationType == that.evaluationType
+        && Objects.equals(result, that.result);
   }
 
   @Override

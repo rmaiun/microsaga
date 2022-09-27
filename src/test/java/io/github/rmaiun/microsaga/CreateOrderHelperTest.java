@@ -64,13 +64,13 @@ public class CreateOrderHelperTest {
     EvaluationResult<NoResult> result = createOrderHelper.createOrdersWithRetryAction(new CreateOrderDto("user1", "Iphone X"));
     int results = 0;
     for (Evaluation<?> e : result.getEvaluationHistory().getEvaluations()) {
-      if (e.getResult().getData() != null){
-        results ++;
+      if (e.getResult().getData() != null) {
+        results++;
       }
     }
     assertEquals(900, accounts.get(USER_1));
     assertEquals(9, catalog.getProduct(IPHONE_X));
-    assertEquals(3,results);
+    assertEquals(3, results);
   }
 
   @Test
