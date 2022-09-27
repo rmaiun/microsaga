@@ -1,34 +1,26 @@
-package io.github.rmaiun.microsaga.support;
+package io.github.rmaiun.microsaga.component;
 
-import io.github.rmaiun.microsaga.component.SagaTransactor;
 import io.github.rmaiun.microsaga.saga.Saga;
-import java.util.UUID;
-import java.util.function.Function;
+import io.github.rmaiun.microsaga.support.EvaluationResult;
+import io.github.rmaiun.microsaga.util.SagaUtils;
 
 public class SagaRunner<A> {
 
   private final SagaTransactor sagaTransactor;
-  private String id = UUID.randomUUID().toString().replace("-", "");
+  private String id;
   private Saga<A> saga;
 
   public SagaRunner(SagaTransactor sagaTransactor) {
     this.sagaTransactor = sagaTransactor;
+    this.id = SagaUtils.defaultId();
   }
 
   public EvaluationResult<A> transact() {
     return sagaTransactor.transact(id, saga);
   }
 
-  public A transactOrThrow() {
-    return sagaTransactor.transactOrThrow(id, saga);
-  }
-
-  public <E extends RuntimeException> A transactOrThrow(Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    return sagaTransactor.transactOrThrow(id, saga, errorTransformer);
-  }
-
-  public SagaRunner<A> withName(String name) {
-    this.id = name;
+  public SagaRunner<A> withId(String id) {
+    this.id = id;
     return this;
   }
 

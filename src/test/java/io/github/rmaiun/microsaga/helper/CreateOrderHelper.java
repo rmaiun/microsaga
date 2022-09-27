@@ -48,8 +48,9 @@ public class CreateOrderHelper {
 
     new SagaManager()
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
-        .withName("testSaga")
-        .transactOrThrow();
+        .withId("testSaga")
+        .transact()
+        .valueOrThrow();
   }
 
   public void createOrdersWithFailedDelivery(CreateOrderDto dto) {
@@ -68,7 +69,7 @@ public class CreateOrderHelper {
 
     EvaluationResult<NoResult> result = new SagaManager()
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
-        .withName("testSaga")
+        .withId("testSaga")
         .transact();
     logSaga(result.getEvaluationHistory());
   }
@@ -90,12 +91,12 @@ public class CreateOrderHelper {
 
     EvaluationResult<NoResult> result = new SagaManager()
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
-        .withName("testSaga")
+        .withId("testSaga")
         .transact();
     logSaga(result.getEvaluationHistory());
   }
 
-  public void createOrdersWithRetryAction(CreateOrderDto dto) {
+  public EvaluationResult<NoResult> createOrdersWithRetryAction(CreateOrderDto dto) {
     SagaStep<ProductOrder> orderSagaPart = Sagas.action("makeOrder", () -> orderService.makeOrder(dto.getProduct()))
         .compensate(Sagas.compensation("cancelOrder", () -> orderService.cancelOrder(dto.getProduct())));
 
@@ -112,13 +113,14 @@ public class CreateOrderHelper {
 
     EvaluationResult<NoResult> result = new SagaManager()
         .saga(orderSagaPart.then(paymentSagaPart).then(deliverySagaPart))
-        .withName("testSaga")
+        .withId("testSaga")
         .transact();
     logSaga(result.getEvaluationHistory());
+    return result;
   }
 
   private void logSaga(EvaluationHistory evaluationHistory) {
-    for (Evaluation e : evaluationHistory.getEvaluations()) {
+    for (Evaluation<?> e : evaluationHistory.getEvaluations()) {
       LOG.info("SAGA:{} [{}:{}] {} {}(ms)", evaluationHistory.getSagaId(), e.getEvaluationType().name().toLowerCase(),
           e.isSuccess() ? "success" : "failed", e.getName(), e.getDuration());
     }

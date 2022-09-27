@@ -1,7 +1,6 @@
 package io.github.rmaiun.microsaga.component;
 
 import io.github.rmaiun.microsaga.saga.Saga;
-import io.github.rmaiun.microsaga.support.SagaRunner;
 
 public class SagaManager {
 

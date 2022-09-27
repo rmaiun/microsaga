@@ -1,27 +1,31 @@
 package io.github.rmaiun.microsaga.support;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
-public class Evaluation {
+public class Evaluation<A> {
 
   private final String name;
   private final EvaluationType evaluationType;
   private final long duration;
   private final boolean success;
 
-  public Evaluation(String name, EvaluationType evaluationType, long duration, boolean success) {
+  private final EvaluationData<A> result;
+
+  public Evaluation(String name, EvaluationType evaluationType, long duration, boolean success, A data) {
     this.name = name;
     this.evaluationType = evaluationType;
     this.duration = duration;
     this.success = success;
+    this.result = new EvaluationData<>(data);
   }
 
-  public static Evaluation action(String name, long duration, boolean success) {
-    return new Evaluation(name, EvaluationType.ACTION, duration, success);
+  public static <B> Evaluation<B> action(String name, long duration, boolean success, B result) {
+    return new Evaluation<>(name, EvaluationType.ACTION, duration, success, result);
   }
 
-  public static Evaluation compensation(String name, long duration, boolean success) {
-    return new Evaluation(name, EvaluationType.COMPENSATION, duration, success);
+  public static <B> Evaluation<B> compensation(String name, long duration, boolean success, B result) {
+    return new Evaluation<>(name, EvaluationType.COMPENSATION, duration, success, result);
   }
 
   public String getName() {
@@ -40,15 +44,8 @@ public class Evaluation {
     return success;
   }
 
-  @Override
-  public String toString() {
-    final StringBuilder sb = new StringBuilder("Evaluation{");
-    sb.append("name='").append(name).append('\'');
-    sb.append(", evaluationType=").append(evaluationType);
-    sb.append(", duration=").append(duration);
-    sb.append(", success=").append(success);
-    sb.append('}');
-    return sb.toString();
+  public EvaluationData<A> getResult() {
+    return result;
   }
 
   @Override
@@ -59,27 +56,23 @@ public class Evaluation {
     if (!(o instanceof Evaluation)) {
       return false;
     }
-
-    Evaluation that = (Evaluation) o;
-
-    if (duration != that.duration) {
-      return false;
-    }
-    if (success != that.success) {
-      return false;
-    }
-    if (!Objects.equals(name, that.name)) {
-      return false;
-    }
-    return evaluationType == that.evaluationType;
+    Evaluation<?> that = (Evaluation<?>) o;
+    return duration == that.duration && success == that.success && Objects.equals(name, that.name) && evaluationType == that.evaluationType && Objects.equals(result, that.result);
   }
 
   @Override
   public int hashCode() {
-    int result = name != null ? name.hashCode() : 0;
-    result = 31 * result + (evaluationType != null ? evaluationType.hashCode() : 0);
-    result = 31 * result + (int) (duration ^ (duration >>> 32));
-    result = 31 * result + (success ? 1 : 0);
-    return result;
+    return Objects.hash(name, evaluationType, duration, success, result);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", Evaluation.class.getSimpleName() + "[", "]")
+        .add("name='" + name + "'")
+        .add("evaluationType=" + evaluationType)
+        .add("duration=" + duration)
+        .add("success=" + success)
+        .add("result=" + result)
+        .toString();
   }
 }

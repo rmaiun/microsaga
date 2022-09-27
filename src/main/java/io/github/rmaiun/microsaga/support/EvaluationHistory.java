@@ -6,9 +6,9 @@ import java.util.Objects;
 public class EvaluationHistory {
 
   private final String sagaId;
-  private final List<Evaluation> evaluations;
+  private final List<Evaluation<?>> evaluations;
 
-  public EvaluationHistory(String sagaId, List<Evaluation> evaluations) {
+  public EvaluationHistory(String sagaId, List<Evaluation<?>> evaluations) {
     this.sagaId = sagaId;
     this.evaluations = evaluations;
   }
@@ -17,7 +17,7 @@ public class EvaluationHistory {
     return sagaId;
   }
 
-  public List<Evaluation> getEvaluations() {
+  public List<Evaluation<?>> getEvaluations() {
     return evaluations;
   }
 

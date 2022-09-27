@@ -1,4 +1,4 @@
-package io.github.rmaiun.microsaga.support;
+package io.github.rmaiun.microsaga.saga;
 
 import io.github.rmaiun.microsaga.util.SagaUtils;
 import java.util.function.Consumer;
