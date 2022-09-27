@@ -2,6 +2,7 @@ package io.github.rmaiun.microsaga.util;
 
 import io.github.rmaiun.microsaga.func.CheckedFunction;
 import io.github.rmaiun.microsaga.support.NoResult;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -10,6 +11,10 @@ import net.jodah.failsafe.RetryPolicy;
 public class SagaUtils {
 
   private SagaUtils() {
+  }
+
+  public static String defaultId() {
+    return UUID.randomUUID().toString().replace("-", "");
   }
 
   public static <A> RetryPolicy<A> defaultRetryPolicy() {

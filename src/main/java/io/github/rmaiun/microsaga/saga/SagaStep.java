@@ -1,7 +1,5 @@
 package io.github.rmaiun.microsaga.saga;
 
-import io.github.rmaiun.microsaga.support.SagaCompensation;
-
 public class SagaStep<A> extends Saga<A> {
 
   private final SagaAction<A> action;

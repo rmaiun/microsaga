@@ -1,5 +1,7 @@
 package io.github.rmaiun.microsaga;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import io.github.rmaiun.microsaga.dto.CreateOrderDto;
 import io.github.rmaiun.microsaga.helper.CreateOrderHelper;
 import io.github.rmaiun.microsaga.services.BusinessLogger;
@@ -7,6 +9,9 @@ import io.github.rmaiun.microsaga.services.Catalog;
 import io.github.rmaiun.microsaga.services.DeliveryService;
 import io.github.rmaiun.microsaga.services.MoneyTransferService;
 import io.github.rmaiun.microsaga.services.OrderService;
+import io.github.rmaiun.microsaga.support.Evaluation;
+import io.github.rmaiun.microsaga.support.EvaluationResult;
+import io.github.rmaiun.microsaga.support.NoResult;
 import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,8 +41,8 @@ public class CreateOrderHelperTest {
 
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
     createOrderHelper.createOrder(new CreateOrderDto("user1", "Iphone X"));
-    Assertions.assertEquals(900, accounts.get(USER_1));
-    Assertions.assertEquals(9, catalog.getProduct(IPHONE_X));
+    assertEquals(900, accounts.get(USER_1));
+    assertEquals(9, catalog.getProduct(IPHONE_X));
   }
 
   @Test
@@ -56,9 +61,16 @@ public class CreateOrderHelperTest {
     BusinessLogger businessLogger = new BusinessLogger();
 
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
-    createOrderHelper.createOrdersWithRetryAction(new CreateOrderDto("user1", "Iphone X"));
-    Assertions.assertEquals(900, accounts.get(USER_1));
-    Assertions.assertEquals(9, catalog.getProduct(IPHONE_X));
+    EvaluationResult<NoResult> result = createOrderHelper.createOrdersWithRetryAction(new CreateOrderDto("user1", "Iphone X"));
+    int results = 0;
+    for (Evaluation<?> e : result.getEvaluationHistory().getEvaluations()) {
+      if (e.getResult().getData() != null){
+        results ++;
+      }
+    }
+    assertEquals(900, accounts.get(USER_1));
+    assertEquals(9, catalog.getProduct(IPHONE_X));
+    assertEquals(3,results);
   }
 
   @Test
@@ -78,8 +90,8 @@ public class CreateOrderHelperTest {
 
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
     createOrderHelper.createOrdersWithFailedDelivery(new CreateOrderDto("user1", "Iphone X"));
-    Assertions.assertEquals(1000, accounts.get(USER_1));
-    Assertions.assertEquals(10, catalog.getProduct(IPHONE_X));
+    assertEquals(1000, accounts.get(USER_1));
+    assertEquals(10, catalog.getProduct(IPHONE_X));
   }
 
   @Test
@@ -99,7 +111,7 @@ public class CreateOrderHelperTest {
 
     CreateOrderHelper createOrderHelper = new CreateOrderHelper(orderService, moneyTransferService, deliveryService, businessLogger);
     createOrderHelper.createOrdersWithRetryCompensation(new CreateOrderDto("user1", "Iphone X"));
-    Assertions.assertEquals(1000, accounts.get(USER_1));
-    Assertions.assertEquals(10, catalog.getProduct(IPHONE_X));
+    assertEquals(1000, accounts.get(USER_1));
+    assertEquals(10, catalog.getProduct(IPHONE_X));
   }
 }

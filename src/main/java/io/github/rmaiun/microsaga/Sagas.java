@@ -6,7 +6,7 @@ import io.github.rmaiun.microsaga.saga.SagaAction;
 import io.github.rmaiun.microsaga.saga.SagaFlatMap;
 import io.github.rmaiun.microsaga.saga.SagaSuccess;
 import io.github.rmaiun.microsaga.support.NoResult;
-import io.github.rmaiun.microsaga.support.SagaCompensation;
+import io.github.rmaiun.microsaga.saga.SagaCompensation;
 import io.github.rmaiun.microsaga.util.SagaUtils;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
