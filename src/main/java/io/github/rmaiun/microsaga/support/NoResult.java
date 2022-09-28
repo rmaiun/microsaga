@@ -1,21 +1,19 @@
 package io.github.rmaiun.microsaga.support;
 
-public final class NoResult {
+import java.util.StringJoiner;
 
-  private static NoResult instance = null;
+public class NoResult {
 
-  private NoResult() {
+  public NoResult() {
   }
 
   public static NoResult instance() {
-    if (instance == null) {
-      instance = new NoResult();
-    }
-    return instance;
+    return new NoResult();
   }
 
   @Override
   public String toString() {
-    return "NoResult{}";
+    return new StringJoiner(", ", NoResult.class.getSimpleName() + "[", "]")
+        .toString();
   }
 }
