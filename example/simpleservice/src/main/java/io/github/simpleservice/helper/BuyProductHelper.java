@@ -1,5 +1,6 @@
 package io.github.simpleservice.helper;
 
+import static io.github.rmaiun.microsaga.support.EvaluationType.COMPENSATION;
 import static io.github.simpleservice.domain.SagaInstanceState.FAILED;
 import static io.github.simpleservice.domain.SagaInstanceState.RETRY_PLANNED;
 import static io.github.simpleservice.domain.SagaInstanceState.SUCCESS;
@@ -9,12 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.rmaiun.microsaga.component.SagaManager;
 import io.github.rmaiun.microsaga.support.EvaluationData;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
-import io.github.rmaiun.microsaga.support.EvaluationType;
 import io.github.rmaiun.microsaga.support.NoResult;
 import io.github.simpleservice.domain.SagaInstance;
+import io.github.simpleservice.domain.SagaInstanceState;
 import io.github.simpleservice.domain.SagaInvocation;
 import io.github.simpleservice.dto.BuyProductDto;
-import io.github.simpleservice.repository.SagaRepository;
+import io.github.simpleservice.repository.SagaInstanceRepository;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -36,11 +37,11 @@ public class BuyProductHelper {
   private final PaymentSagaHelper paymentSagaHelper;
   private final DeliverySagaHelper deliverySagaHelper;
   private final SagaManager sagaManager;
-  private final SagaRepository sagaRepository;
+  private final SagaInstanceRepository sagaRepository;
   private final ObjectMapper objectMapper;
 
   public BuyProductHelper(OrderSagaHelper orderSagaHelper, PaymentSagaHelper paymentSagaHelper, DeliverySagaHelper deliverySagaHelper,
-      SagaManager sagaManager, SagaRepository sagaRepository, ObjectMapper objectMapper) {
+      SagaManager sagaManager, SagaInstanceRepository sagaRepository, ObjectMapper objectMapper) {
     this.orderSagaHelper = orderSagaHelper;
     this.paymentSagaHelper = paymentSagaHelper;
     this.deliverySagaHelper = deliverySagaHelper;
@@ -76,7 +77,8 @@ public class BuyProductHelper {
 
   private void updateSaga(SagaInstance sagaInstance, EvaluationResult<NoResult> evaluationResult) {
     Set<SagaInvocation> sagaExecutions = evaluationResult.getEvaluationHistory().getEvaluations().stream()
-        .map(e -> new SagaInvocation(sagaInstance.getSagaId(), e.getName(), e.isSuccess(), EvaluationType.COMPENSATION == e.getEvaluationType(), ))
+        .map(e -> new SagaInvocation(sagaInstance.getSagaId(), e.getName(), e.isSuccess(),
+            COMPENSATION == e.getEvaluationType(), objectToString(e.getResult())))
         .collect(Collectors.toSet());
     ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
     if (evaluationResult.isError() && RETRY_PLANNED == sagaInstance.getState()) {
@@ -100,6 +102,7 @@ public class BuyProductHelper {
       SagaInstance sagaInstance = new SagaInstance();
       String sagaId = String.format("BUYPROD|%s", UUID.randomUUID().toString().replace("-", ""));
       sagaInstance.setSagaId(sagaId);
+      sagaInstance.setState(SagaInstanceState.SUBMITTED);
       sagaInstance.setInput(objectToString(dto));
       return sagaRepository.save(sagaInstance);
     } else {

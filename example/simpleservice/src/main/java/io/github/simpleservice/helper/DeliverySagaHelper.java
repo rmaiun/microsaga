@@ -1,6 +1,5 @@
 package io.github.simpleservice.helper;
 
-import io.github.rmaiun.microsaga.Sagas;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.NoResult;
 import io.github.simpleservice.domain.SagaInvocation;
@@ -15,15 +14,16 @@ import org.springframework.stereotype.Service;
 public class DeliverySagaHelper {
 
   private final DeliveryService deliveryService;
+  private final SagaRequestHelper sagaRequestHelper;
 
-  public DeliverySagaHelper(DeliveryService deliveryService) {
+  public DeliverySagaHelper(DeliveryService deliveryService, SagaRequestHelper sagaRequestHelper) {
     this.deliveryService = deliveryService;
+    this.sagaRequestHelper = sagaRequestHelper;
   }
 
   public SagaStep<NoResult> planDeliverySagaStep(PaymentProcessedDto dto, String city, List<SagaInvocation> invocationList) {
-    return Sagas.voidRetryableAction("planDelivery",
-            () -> deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), city)),
-            new RetryPolicy<NoResult>().withMaxRetries(3))
+    var retryPolicy = new RetryPolicy<NoResult>().withMaxRetries(3);
+    return sagaRequestHelper.mkAction("planDelivery", () -> deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), city)), invocationList, retryPolicy)
         .withoutCompensation();
   }
 }

@@ -1,6 +1,5 @@
 package io.github.simpleservice.helper;
 
-import io.github.rmaiun.microsaga.Sagas;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.simpleservice.domain.SagaInvocation;
 import io.github.simpleservice.dto.OrderCreatedDto;
@@ -18,19 +17,23 @@ import org.springframework.stereotype.Service;
 public class PaymentSagaHelper {
 
   private final PaymentService paymentService;
+  private final SagaRequestHelper sagaRequestHelper;
+
 
   @Value("${company.name}")
   private String companyName;
 
-  public PaymentSagaHelper(PaymentService paymentService) {
+  public PaymentSagaHelper(PaymentService paymentService, SagaRequestHelper sagaRequestHelper) {
     this.paymentService = paymentService;
+    this.sagaRequestHelper = sagaRequestHelper;
   }
 
   public SagaStep<PaymentProcessedDto> processPaymentSagaStep(OrderCreatedDto dto, List<SagaInvocation> invocationList) {
-    var action = Sagas.action("processPayment",
-        sagaId -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId)));
-    var compensation = Sagas.retryableCompensation("cancelPayment",
-        paymentService::cancelPayment, new RetryPolicy<>().withDelay(Duration.of(5L, ChronoUnit.SECONDS)));
+    var retryPolicy = new RetryPolicy<>().withDelay(Duration.of(5L, ChronoUnit.SECONDS));
+    var action = sagaRequestHelper.mkAction("processPayment",
+        sagaId -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId)), invocationList);
+    var compensation = sagaRequestHelper.mkCompensation("cancelPayment",
+        paymentService::cancelPayment, invocationList, retryPolicy);
     return action.compensate(compensation);
   }
 }
