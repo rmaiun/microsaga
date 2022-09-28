@@ -49,6 +49,12 @@ public class EvaluationResult<A> {
     return evaluationHistory;
   }
 
+  public void orElseThrow() {
+    if (isError()) {
+      throw getError();
+    }
+  }
+
   public A valueOrThrow() {
     if (isError()) {
       throw getError();

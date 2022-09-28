@@ -29,25 +29,6 @@ public class DefaultSagaTransactor implements SagaTransactor {
     return run(sagaId, saga);
   }
 
-  @Override
-  public <A> A transactOrThrow(String sagaId, Saga<A> saga) {
-    EvaluationResult<A> result = run(sagaId, saga);
-    if (result.isError()) {
-      throw result.getError();
-    }
-    return result.getValue();
-  }
-
-  @Override
-  public <A, E extends RuntimeException> A transactOrThrow(String sagaId, Saga<A> saga, Function<Throwable, E> errorTransformer) {
-    EvaluationResult<A> result = run(sagaId, saga);
-    if (result.isError()) {
-      Throwable error = result.getError();
-      throw errorTransformer.apply(error);
-    }
-    return result.getValue();
-  }
-
   @SuppressWarnings("unchecked")
   public <X> EvaluationResult<X> run(String sagaId, Saga<X> sagaInput) {
     Stack<SagaCompensation> compensations = new Stack<>();

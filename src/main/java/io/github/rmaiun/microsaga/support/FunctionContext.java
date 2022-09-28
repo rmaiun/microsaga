@@ -6,8 +6,8 @@ import java.util.function.Function;
 
 public class FunctionContext {
 
-  private Function<Object, Saga<Object>> sagaFunction;
-  private BiFunction<Object, Object, Object> transformer;
+  private final Function<Object, Saga<Object>> sagaFunction;
+  private final BiFunction<Object, Object, Object> transformer;
 
   public FunctionContext(Function<Object, Saga<Object>> sagaFunction) {
     this.sagaFunction = sagaFunction;
