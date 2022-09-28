@@ -7,16 +7,19 @@ import io.github.simpleservice.dto.ProcessPaymentDto;
 import io.github.simpleservice.repository.AccountRepository;
 import io.github.simpleservice.repository.PaymentRepository;
 import java.time.ZonedDateTime;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentService {
+
   public static final Logger LOG = LogManager.getLogger(PaymentService.class);
 
   private final AccountRepository accountRepository;
@@ -27,7 +30,7 @@ public class PaymentService {
     this.paymentRepository = paymentRepository;
   }
 
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PaymentProcessedDto processPayment(ProcessPaymentDto dto) {
     LOG.info("Calling PaymentService.processPayment");
     var acc1 = accountRepository.findByCode(dto.from())
@@ -53,9 +56,13 @@ public class PaymentService {
     }
   }
 
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void cancelPayment(String sagaId) {
     LOG.info("Calling PaymentService.cancelPayment");
+    var random = new Random().nextInt(11);
+    if (true) {
+      throw new RuntimeException("Unable to cancel payment: unexpected issue");
+    }
     var accounts = StreamSupport.stream(accountRepository.findAll().spliterator(), false)
         .collect(Collectors.toMap(Account::getId, Function.identity()));
     var payments = paymentRepository.findAllBySagaId(sagaId);

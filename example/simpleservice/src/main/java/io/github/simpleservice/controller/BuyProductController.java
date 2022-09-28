@@ -18,6 +18,6 @@ public class BuyProductController {
 
   @PostMapping("/buy")
   public void buyProduct(@RequestBody BuyProductDto dto) {
-    buyProductHelper.buyProduct(dto, Collections.emptyList());
+    buyProductHelper.buyProduct(dto, Collections.emptyList()).orElseThrow();
   }
 }
