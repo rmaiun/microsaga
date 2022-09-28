@@ -8,6 +8,8 @@ import static io.github.simpleservice.domain.SagaInstanceState.SUCCESS;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.rmaiun.microsaga.component.SagaManager;
+import io.github.rmaiun.microsaga.exception.SagaActionFailedException;
+import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
 import io.github.rmaiun.microsaga.support.EvaluationData;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
 import io.github.rmaiun.microsaga.support.NoResult;
@@ -22,11 +24,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 @Service
@@ -50,8 +53,8 @@ public class BuyProductHelper {
     this.objectMapper = objectMapper;
   }
 
-  @Transactional
-  public void buyProduct(BuyProductDto dto, List<SagaInvocation> invocationList) {
+  @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = {SagaActionFailedException.class, SagaCompensationFailedException.class})
+  public EvaluationResult<NoResult> buyProduct(BuyProductDto dto, List<SagaInvocation> invocationList) {
     SagaInstance sagaEntity = createSagaEntity(dto, invocationList);
     LOG.info("Starting saga {}", sagaEntity.getSagaId());
     var saga = orderSagaHelper.createOrderSagaStep(dto.client(), dto.product(), invocationList)
@@ -64,12 +67,12 @@ public class BuyProductHelper {
         .peek(this::logEvaluation);
     LOG.info("Updating saga {}", sagaEntity.getSagaId());
     updateSaga(sagaEntity, sagaResult);
+    return sagaResult;
   }
 
   private void logEvaluation(EvaluationResult<NoResult> er) {
     if (er.isError()) {
       LOG.error("Couldn't buy some product", er.getError());
-      er.getError().printStackTrace();
     } else {
       LOG.info("Saga {} is successfully finished", er.getEvaluationHistory().getSagaId());
     }
@@ -81,20 +84,17 @@ public class BuyProductHelper {
             COMPENSATION == e.getEvaluationType(), objectToString(e.getResult())))
         .collect(Collectors.toSet());
     ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-    if (evaluationResult.isError() && RETRY_PLANNED == sagaInstance.getState()) {
+    if (evaluationResult.isError() && (RETRY_PLANNED == sagaInstance.getState() || evaluationResult.getError() instanceof SagaActionFailedException)) {
       sagaInstance.setState(FAILED);
-    } else if (evaluationResult.isError()) {
+    } else if (evaluationResult.isError() && evaluationResult.getError() instanceof SagaCompensationFailedException) {
       sagaInstance.setState(RETRY_PLANNED);
+      sagaInstance.setRetryAfter(now.plusSeconds(3));
     } else {
       sagaInstance.setState(SUCCESS);
     }
     sagaInstance.setFinishedAt(now);
-    if (evaluationResult.isError()) {
-      sagaInstance.setRetryAfter(now.plusSeconds(3));
-    }
     sagaInstance.setInvocations(sagaExecutions);
     sagaRepository.save(sagaInstance);
-    evaluationResult.valueOrThrow();
   }
 
   private SagaInstance createSagaEntity(BuyProductDto dto, List<SagaInvocation> executionList) {
