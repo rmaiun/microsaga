@@ -38,6 +38,11 @@ public class SagaCompensation {
     }, SagaUtils.defaultRetryPolicy(), true);
   }
 
+  public static SagaCompensation emptyCompensation(String name) {
+    return new SagaCompensation(name, () -> {
+    }, SagaUtils.defaultRetryPolicy(), false);
+  }
+
   public String getName() {
     return name;
   }

@@ -3,6 +3,7 @@ package io.github.rmaiun.microsaga;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.rmaiun.microsaga.component.SagaManager;
@@ -13,6 +14,7 @@ import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
 import io.github.rmaiun.microsaga.support.NoResult;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -210,5 +212,57 @@ public class CoreTest {
     assertNotNull(evaluationResult);
     String sagaId = evaluationResult.getEvaluationHistory().getSagaId();
     assertEquals(sagaId, ref.get());
+  }
+
+  @Test
+  public void actionThrowsTest() {
+    assertThrows(SagaActionFailedException.class,
+        () -> SagaManager.use(Sagas.actionThrows("a1", new RuntimeException("action a1 is failed"))
+            .compensate(Sagas.emptyCompensation("c1")))
+            .transact()
+            .orElseThrow());
+  }
+
+  @Test
+  public void emptyCompensationTest() {
+    Saga<Object> saga = Sagas.actionThrows("a1", new RuntimeException("action a1 is failed"))
+        .compensate(Sagas.emptyCompensation("c1"));
+    EvaluationResult<Object> er = SagaManager.use(saga).transact();
+    assertEquals(2, er.getEvaluationHistory().getEvaluations().size());
+    boolean allEvaluationsPresent = er.getEvaluationHistory().getEvaluations()
+        .stream()
+        .allMatch(e -> Arrays.asList("a1", "c1").contains(e.getName()));
+    assertTrue(allEvaluationsPresent);
+  }
+
+  @Test
+  public void compensationThrowsTest() {
+    Saga<Object> saga = Sagas.actionThrows("a1", new RuntimeException("action a1 is failed"))
+        .compensate(Sagas.compensationThrows("c1", new RuntimeException("compensation c1 is failed")));
+    EvaluationResult<Object> er = SagaManager.use(saga).transact();
+    assertThrows(SagaCompensationFailedException.class, er::orElseThrow);
+  }
+
+  @Test
+  public void foldEvaluationResultTest() {
+    Saga<Object> saga = Sagas.actionThrows("a1", new RuntimeException("action a1 is failed"))
+        .compensate(Sagas.compensationThrows("c1", new RuntimeException("compensation c1 is failed")));
+    String foldEvaluationResult = SagaManager.use(saga)
+        .withId("foldEvaluationResultTest")
+        .transact()
+        .fold(v -> "no result", Throwable::getMessage);
+    assertEquals("Compensation for saga foldEvaluationResultTest is failed while compensates c1 action", foldEvaluationResult);
+  }
+
+  @Test
+  public void adaptErrorTest() {
+    Saga<Object> saga = Sagas.actionThrows("a1", new RuntimeException("action a1 is failed"))
+        .compensate(Sagas.compensationThrows("c1", new RuntimeException("compensation c1 is failed")));
+    Object foldEvaluationResult = SagaManager.use(saga)
+        .withId("foldEvaluationResultTest")
+        .transact()
+        .adaptError(err -> new NoResult())
+        .valueOrThrow();
+    assertNotNull(foldEvaluationResult);
   }
 }
