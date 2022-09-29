@@ -39,9 +39,7 @@ public class SagaRequestHelper {
     Function<SagaInvocation, SagaAction<A>> existMapper = invocation ->
         invocation.isSuccess()
             ? Sagas.action(name, () -> strToObject(invocation.getResult()))
-            : Sagas.action(name, () -> {
-              throw new RuntimeException(invocation.getResult());
-            });
+            : Sagas.actionThrows(name, new RuntimeException(invocation.getResult()));
     return invocations.stream()
         .filter(i -> !i.isCompensation() && i.getName().equals(name))
         .findAny()
@@ -58,8 +56,7 @@ public class SagaRequestHelper {
         .filter(i -> i.isCompensation() && i.getName().equals(name))
         .findAny()
         .filter(SagaInvocation::isSuccess)
-        .map(i -> Sagas.compensation(name, () -> {
-        }))
+        .map(i -> Sagas.emptyCompensation(name))
         .orElseGet(() -> Sagas.retryableCompensation(name, compensation, retryPolicy));
   }
 
