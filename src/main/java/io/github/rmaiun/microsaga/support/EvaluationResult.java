@@ -73,4 +73,20 @@ public class EvaluationResult<A> {
     consumer.accept(this);
     return this;
   }
+
+  public <B> B fold(Function<A, B> valueTransformer, Function<RuntimeException, B> errorTransformer) {
+    if (isError()) {
+      return errorTransformer.apply(error);
+    } else {
+      return valueTransformer.apply(value);
+    }
+  }
+
+  public EvaluationResult<A> adaptError(Function<RuntimeException, A> errorAdapter) {
+    if (isError()) {
+      return new EvaluationResult<>(errorAdapter.apply(this.error), this.evaluationHistory, null);
+    } else {
+      return this;
+    }
+  }
 }
