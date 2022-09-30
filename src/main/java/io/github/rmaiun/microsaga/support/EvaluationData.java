@@ -4,7 +4,11 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 public class EvaluationData<T> {
-  private final T data;
+
+  private T data;
+
+  public EvaluationData() {
+  }
 
   public EvaluationData(T data) {
     this.data = data;
@@ -12,6 +16,10 @@ public class EvaluationData<T> {
 
   public T getData() {
     return data;
+  }
+
+  public void setData(T data) {
+    this.data = data;
   }
 
   @Override
