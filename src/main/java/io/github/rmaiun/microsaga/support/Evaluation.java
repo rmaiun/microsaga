@@ -12,20 +12,20 @@ public class Evaluation<A> {
 
   private final EvaluationData<A> result;
 
-  public Evaluation(String name, EvaluationType evaluationType, long duration, boolean success, A data) {
+  public Evaluation(String name, EvaluationType evaluationType, long duration, boolean success, A data, String path) {
     this.name = name;
     this.evaluationType = evaluationType;
     this.duration = duration;
     this.success = success;
-    this.result = new EvaluationData<>(data);
+    this.result = new EvaluationData<>(data, path);
   }
 
-  public static <B> Evaluation<B> action(String name, long duration, boolean success, B result) {
-    return new Evaluation<>(name, EvaluationType.ACTION, duration, success, result);
+  public static <B> Evaluation<B> action(String name, long duration, boolean success, B result, String path) {
+    return new Evaluation<>(name, EvaluationType.ACTION, duration, success, result, path);
   }
 
   public static <B> Evaluation<B> compensation(String name, long duration, boolean success, B result) {
-    return new Evaluation<>(name, EvaluationType.COMPENSATION, duration, success, result);
+    return new Evaluation<>(name, EvaluationType.COMPENSATION, duration, success, result, null);
   }
 
   public String getName() {

@@ -81,13 +81,14 @@ public class DefaultSagaTransactor implements SagaTransactor {
     String actionName = sagaStep.getAction().getName();
     try {
       Object callResult = Failsafe.with(sagaStep.getAction().getRetryPolicy()).get(() -> action.apply(sagaId));
-      evaluations.add(Evaluation.action(actionName, System.currentTimeMillis() - actionStart, true, callResult));
+      String path = callResult.getClass().getName();
+      evaluations.add(Evaluation.action(actionName, System.currentTimeMillis() - actionStart, true, callResult, path));
       Object finalResult = transformer == null
           ? callResult
           : transformer.apply(prevValue, callResult);
       return EvaluationResult.success(finalResult);
     } catch (Throwable ta) {
-      evaluations.add(Evaluation.action(actionName, System.currentTimeMillis() - actionStart, false, ta.toString()));
+      evaluations.add(Evaluation.action(actionName, System.currentTimeMillis() - actionStart, false, ta.toString(), null));
       long compensationStart = System.currentTimeMillis();
       String compensation = null;
       try {
