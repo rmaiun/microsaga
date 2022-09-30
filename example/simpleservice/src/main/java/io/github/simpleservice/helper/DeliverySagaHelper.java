@@ -23,7 +23,8 @@ public class DeliverySagaHelper {
 
   public SagaStep<NoResult> planDeliverySagaStep(PaymentProcessedDto dto, String city, List<SagaInvocation> invocationList) {
     var retryPolicy = new RetryPolicy<NoResult>().withMaxRetries(3);
-    return sagaRequestHelper.mkAction("planDelivery", () -> deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), city)), invocationList, retryPolicy)
+    return sagaRequestHelper
+        .mkAction("planDelivery", () -> deliveryService.planDelivery(new PlanDeliveryDto(dto.payer(), city)), invocationList, retryPolicy)
         .withoutCompensation();
   }
 }

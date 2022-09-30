@@ -19,7 +19,6 @@ public class PaymentSagaHelper {
   private final PaymentService paymentService;
   private final SagaRequestHelper sagaRequestHelper;
 
-
   @Value("${company.name}")
   private String companyName;
 
@@ -29,9 +28,10 @@ public class PaymentSagaHelper {
   }
 
   public SagaStep<PaymentProcessedDto> processPaymentSagaStep(OrderCreatedDto dto, List<SagaInvocation> invocationList) {
-    var retryPolicy = new RetryPolicy<>().withDelay(Duration.of(5L, ChronoUnit.SECONDS));
+    var retryPolicy = new RetryPolicy<>().withDelay(Duration.of(1L, ChronoUnit.SECONDS));
     var action = sagaRequestHelper.mkAction("processPayment",
-        sagaId -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId)), invocationList);
+        sagaId -> paymentService.processPayment(new ProcessPaymentDto(dto.client(), companyName, dto.price(), dto.id(), sagaId)),
+        invocationList);
     var compensation = sagaRequestHelper.mkCompensation("cancelPayment",
         paymentService::cancelPayment, invocationList, retryPolicy);
     return action.compensate(compensation);

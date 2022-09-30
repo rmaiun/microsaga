@@ -60,8 +60,9 @@ public class PaymentService {
   public void cancelPayment(String sagaId) {
     LOG.info("Calling PaymentService.cancelPayment");
     var random = new Random().nextInt(11);
-    if (true) {
-      throw new RuntimeException("Unable to cancel payment: unexpected issue");
+    LOG.info("random={}", random);
+    if (random > 6) {
+      throw new RuntimeException(String.format("Unable to cancel payment: unexpected issue [random=%d]", random));
     }
     var accounts = StreamSupport.stream(accountRepository.findAll().spliterator(), false)
         .collect(Collectors.toMap(Account::getId, Function.identity()));
