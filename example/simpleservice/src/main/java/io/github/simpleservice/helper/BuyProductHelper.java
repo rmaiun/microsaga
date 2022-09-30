@@ -20,6 +20,7 @@ import io.github.simpleservice.dto.BuyProductDto;
 import io.github.simpleservice.repository.SagaInstanceRepository;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -53,7 +54,8 @@ public class BuyProductHelper {
     this.objectMapper = objectMapper;
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = {SagaActionFailedException.class, SagaCompensationFailedException.class})
+  @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = { SagaActionFailedException.class,
+      SagaCompensationFailedException.class })
   public EvaluationResult<NoResult> buyProduct(BuyProductDto dto, List<SagaInvocation> invocationList) {
     SagaInstance sagaEntity = createSagaEntity(dto, invocationList);
     LOG.info("Starting saga {}", sagaEntity.getSagaId());
@@ -84,11 +86,12 @@ public class BuyProductHelper {
             COMPENSATION == e.getEvaluationType(), objectToString(e.getResult())))
         .collect(Collectors.toSet());
     ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-    if (evaluationResult.isError() && (RETRY_PLANNED == sagaInstance.getState() || evaluationResult.getError() instanceof SagaActionFailedException)) {
+    if (evaluationResult.isError()
+        && (RETRY_PLANNED == sagaInstance.getState() || evaluationResult.getError() instanceof SagaActionFailedException)) {
       sagaInstance.setState(FAILED);
     } else if (evaluationResult.isError() && evaluationResult.getError() instanceof SagaCompensationFailedException) {
       sagaInstance.setState(RETRY_PLANNED);
-      sagaInstance.setRetryAfter(now.plusSeconds(3));
+      sagaInstance.setRetryAfter(now.plusSeconds(5));
     } else {
       sagaInstance.setState(SUCCESS);
     }
@@ -97,24 +100,26 @@ public class BuyProductHelper {
     sagaRepository.save(sagaInstance);
   }
 
-  private SagaInstance createSagaEntity(BuyProductDto dto, List<SagaInvocation> executionList) {
-    if (CollectionUtils.isEmpty(executionList)) {
+  private SagaInstance createSagaEntity(BuyProductDto dto, List<SagaInvocation> invocationList) {
+    if (CollectionUtils.isEmpty(invocationList)) {
       SagaInstance sagaInstance = new SagaInstance();
       String sagaId = String.format("BUYPROD|%s", UUID.randomUUID().toString().replace("-", ""));
       sagaInstance.setSagaId(sagaId);
       sagaInstance.setState(SagaInstanceState.SUBMITTED);
-      sagaInstance.setInput(objectToString(dto));
+      sagaInstance.setInput(objectToString(new EvaluationData<>(dto, dto.getClass().getName())));
       return sagaRepository.save(sagaInstance);
     } else {
-      String sagaId = executionList.get(0).getSagaId();
-      return sagaRepository.findBySagaId(sagaId)
+      String sagaId = invocationList.get(0).getSagaId();
+      var found = sagaRepository.findSagaInstanceBySagaId(sagaId)
           .orElseThrow(() -> new RuntimeException(String.format("Saga with id %s is not found", sagaId)));
+      found.setInvocations(new HashSet<>(invocationList));
+      return found;
     }
   }
 
   private <T> String objectToString(T dto) {
     try {
-      return objectMapper.writeValueAsString(new EvaluationData<>(dto));
+      return objectMapper.writeValueAsString(dto);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
