@@ -6,12 +6,22 @@ import java.util.StringJoiner;
 public class EvaluationData<T> {
 
   private T data;
+  private String classPath;
 
   public EvaluationData() {
   }
 
-  public EvaluationData(T data) {
+  public EvaluationData(T data, String classPath) {
     this.data = data;
+    this.classPath = classPath;
+  }
+
+  public String getClassPath() {
+    return classPath;
+  }
+
+  public void setClassPath(String classPath) {
+    this.classPath = classPath;
   }
 
   public T getData() {
