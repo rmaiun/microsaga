@@ -10,6 +10,7 @@ import io.github.rmaiun.microsaga.component.SagaManager;
 import io.github.rmaiun.microsaga.exception.SagaActionFailedException;
 import io.github.rmaiun.microsaga.exception.SagaCompensationFailedException;
 import io.github.rmaiun.microsaga.saga.Saga;
+import io.github.rmaiun.microsaga.saga.SagaAction;
 import io.github.rmaiun.microsaga.saga.SagaStep;
 import io.github.rmaiun.microsaga.support.EvaluationResult;
 import io.github.rmaiun.microsaga.support.NoResult;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import net.jodah.failsafe.RetryPolicy;
 import org.junit.jupiter.api.Test;
 
@@ -264,5 +266,56 @@ public class CoreTest {
         .adaptError(err -> new NoResult())
         .valueOrThrow();
     assertNotNull(foldEvaluationResult);
+  }
+
+  @Test
+  public void adoptErrorWithPeekTest() {
+    SagaAction<String> action = Sagas.actionThrows("a1", new RuntimeException("action should fail"));
+    Saga<String> saga = action.withoutCompensation();
+    Function<RuntimeException, String> errorAdopter = err -> {
+      if (err instanceof SagaActionFailedException) {
+        return "default result";
+      } else {
+        throw err;
+      }
+    };
+    AtomicInteger valueCounter = new AtomicInteger(0);
+    AtomicInteger errorCounter = new AtomicInteger(0);
+    String str = SagaManager.use(saga)
+        .transact()
+        .peek(evalRest -> valueCounter.incrementAndGet())
+        .peekValue(v -> valueCounter.incrementAndGet())
+        .peekError(err -> errorCounter.incrementAndGet())
+        .adaptError(errorAdopter)
+        .valueOrThrow();
+    assertEquals("default result", str);
+    assertEquals(1, errorCounter.get());
+    assertEquals(1, valueCounter.get());
+  }
+
+  @Test
+  public void wrongErrorAdoptionWithErrorTransformerTest() {
+    class WrongAdoptionError extends RuntimeException {
+
+      public WrongAdoptionError(String message, Throwable cause) {
+        super(message, cause);
+      }
+    }
+    SagaAction<String> action = Sagas.actionThrows("a1", new RuntimeException("action should fail"));
+    Saga<String> saga = action.compensate(Sagas.compensationThrows("c1", new RuntimeException("compensation is failed")));
+    Function<RuntimeException, String> errorAdopter = err -> {
+      if (err instanceof SagaActionFailedException) {
+        return "default result";
+      } else {
+        throw err;
+      }
+    };
+    WrongAdoptionError result = assertThrows(WrongAdoptionError.class, () -> SagaManager.use(saga)
+        .transact()
+        .adaptError(errorAdopter)
+        .valueOrThrow(err -> new WrongAdoptionError("transformed error", err)));
+    assertNotNull(result);
+    assertEquals("transformed error", result.getMessage());
+    assertEquals(SagaCompensationFailedException.class, result.getCause().getClass());
   }
 }

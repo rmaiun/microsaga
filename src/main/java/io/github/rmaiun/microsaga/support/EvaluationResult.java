@@ -1,5 +1,6 @@
 package io.github.rmaiun.microsaga.support;
 
+import io.github.rmaiun.microsaga.exception.SagaAdaptedException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -74,8 +75,22 @@ public class EvaluationResult<A> {
     return this;
   }
 
+  public EvaluationResult<A> peekValue(Consumer<A> consumer) {
+    if (this.isSuccess()) {
+      consumer.accept(this.getValue());
+    }
+    return this;
+  }
+
+  public EvaluationResult<A> peekError(Consumer<RuntimeException> consumer) {
+    if (this.isError()) {
+      consumer.accept(this.getError());
+    }
+    return this;
+  }
+
   public <B> B fold(Function<A, B> valueTransformer, Function<RuntimeException, B> errorTransformer) {
-    if (isError()) {
+    if (this.isError()) {
       return errorTransformer.apply(error);
     } else {
       return valueTransformer.apply(value);
@@ -83,8 +98,15 @@ public class EvaluationResult<A> {
   }
 
   public EvaluationResult<A> adaptError(Function<RuntimeException, A> errorAdapter) {
-    if (isError()) {
-      return new EvaluationResult<>(errorAdapter.apply(this.error), this.evaluationHistory, null);
+    if (this.isError()) {
+      try {
+        A value = errorAdapter.apply(this.error);
+        return new EvaluationResult<>(value, this.evaluationHistory, null);
+      } catch (RuntimeException t) {
+        return new EvaluationResult<>(null, this.evaluationHistory, t);
+      } catch (Throwable t) {
+        return new EvaluationResult<>(null, this.evaluationHistory, new SagaAdaptedException(t));
+      }
     } else {
       return this;
     }

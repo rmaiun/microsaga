@@ -15,7 +15,8 @@ Nevertheless, saga is a powerful mechanism and easy readable api can help to int
 Microsaga library provides simple and readable api for saga actions and their compensations, giving possibility to declare sagas in composable way.
 Inspired by [cats-saga](https://github.com/VladKopanev/cats-saga).
 Contains one and only dependency to [failsafe](https://github.com/failsafe-lib/failsafe) which allows to use retry behavior in a flexible way.  
-Additional example of usage can be found in this article: [Saga management in Java with microsaga library](https://medium.com/p/dd146ca7d6a6).
+Additional example of usage can be found in this article: [Saga management in Java with microsaga library](https://medium.com/p/dd146ca7d6a6).  
+More complex example with Spring Boot, persistence layer and re-compensations can be found in [simpleservice example](https://github.com/rmaiun/microsaga/tree/main/example/simpleservice).
 
 # Usage
 
@@ -48,11 +49,11 @@ Action can have a compensation, which can be also created using `Sagas` class:
 
 ```java
     SagaCompensation removeUserCompensation = Sagas.compensation("removeUserFromDb",
-    () -> userService.deleteUserByCriteria());
+      () -> userService.deleteUserByCriteria());
     // or using retry policy
     SagaCompensation removeUserCompensation = Sagas.retryableCompensation("removeUserFromDb",
-    () -> userService.deleteUserByCriteria(),
-    new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
+      () -> userService.deleteUserByCriteria(),
+      new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
 ```  
 
 The main difference here is that action is `Callable<A>` because next action can be dependent on result of previous one.
@@ -63,8 +64,8 @@ While we have both action and compensation, we can combine them to some saga ste
     Saga<User> saga = createUserAction.compensate(removeUserCompensation);
     // or we can declare full saga in a one place
     Saga<User> saga = Sagas.action("createUser",() -> myService.createUser(user))
-    .retryableCompensation("removeUserFromDb",
-    () -> userService.deleteUserByCriteria(), new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
+      .retryableCompensation("removeUserFromDb",
+      () -> userService.deleteUserByCriteria(), new RetryPolicy<>().withDelay(Duration.ofSeconds(2)));
 ```  
 
 ## Available Operators
@@ -92,6 +93,19 @@ There different combination operators available in microsaga library:
 
 ```
 
+## Saga identification
+By default saga will use `UUID.randomUUID()` as sagaId. User can customize saga identification using
+`sagaManager.saga(someSaga).withId("customSagaId")` approach.  
+However, there is possibility to pass sagaId implicitly to any action or compensation. To do this, need to use different api.  
+For example:
+```java
+    // action with sagaId
+    Sagas.action("testAction", sagaId -> doSomething(sagaId, dtoIn));
+    // compensation with sagaId
+    Sagas.compensation("compensation#1", sagaId -> deleteAllBySagaId(sagaId));
+```
+Saga runner will use predefined sagaId and propagate it to all actions and compensations which need it.
+
 ## Evaluation
 
 Saga supports lazy evaluation, so it will not be run until we ask for it.
@@ -114,24 +128,37 @@ As it was mentioned above, saga steps are composable, so it is possible to write
 ```java
     AtomicInteger x = new AtomicInteger();
     Saga<Integer> saga = Sagas.action("initX", x::incrementAndGet).compensate("intoToZero", () -> x.set(0))
-    .then(Sagas.action("multiplyBy2", () -> x.get() * 2).compensate("divideBy2", () -> x.set(x.get() / 2)))
-    .flatmap(a -> Sagas.action("intoToString", a::toString).withoutCompensation())
-    .flatmap(str -> Sagas.retryableAction("changeString", () -> "prefix=" + str, new RetryPolicy<String>().withMaxRetries(2)).withoutCompensation())
-    .map(res -> res.split("=").length);
-```  
-
-## Saga identification
-By default saga will use `UUID.randomUUID()` as sagaId. User can customize saga identification using
-`sagaManager.saga(someSaga).withName("customSagaId")` approach.  
-However, there is possibility to pass sagaId implicitly to any action or compensation. To do this, need to use different api.  
-For example:
-```java
-    // action with sagaId
-    Sagas.action("testAction", sagaId -> doSomething(sagaId, dtoIn));
-    // compensation with sagaId
-    Sagas.compensation("compensation#1", sagaId -> deleteAllBySagaId(sagaId));
+      .then(Sagas.action("multiplyBy2", () -> x.get() * 2).compensate("divideBy2", () -> x.set(x.get() / 2)))
+      .flatmap(a -> Sagas.action("intoToString", a::toString).withoutCompensation())
+      .flatmap(str -> Sagas.retryableAction("changeString", () -> "prefix=" + str, new RetryPolicy<String>().withMaxRetries(2)).withoutCompensation())
+      .map(res -> res.split("=").length);
 ```
-Saga runner will use predefined sagaId and propagate it to all actions and compensations which need it.
+`EvaluationResult` includes value or error with the history of evaluations. Each evaluation in `EvaluationHistory` contains information about name, type, duration and result of particular evaluation.
+Need to mention that evaluation result itself has useful methods for result processing, such as:
+- `valueOrThrow` returns value if saga evaluation finishes successfully or throws evaluation error
+- `orElseThrow` void method that returns nothing if saga result is ok or throws an error
+- `valueOrThrow(Function<Throwable, ? extends RuntimeException> errorTransformer)` is the same as previous one, but gives possibility to transform error
+- `peek, peekValue, peekError` apply side effect to `EvaluationResult`, its value or error
+- `fold` takes value and error transformers *(A -> B, error -> B)* as input params and returns transformed value as a result
+- `adaptError` applies error transformer *(err -> A)* to evaluation result in case it was unsuccessful or returns normal result
+
+In alternating scenario evaluation result can contain one of2 runtime errors: `SagaActionFailedException` and `SagaCompensationFailedException`.
+Example of `EvaluationResult` processing:
+```java
+    Saga<String> saga = ...;
+    Function<RuntimeException, String> errorAdopter = err -> {
+      if (err instanceof SagaActionFailedException) {
+        return "default result";
+      } else {
+        throw err;
+      }
+    };
+    String result = SagaManager.use(saga)
+      .transact()
+      .peekValue(v -> logger.info("Obtained value {}", v))
+      .adaptError(errorAdopter)
+      .valueOrThrow();
+```
 
 [Link-Codecov]: https://codecov.io/gh/rmaiun/microsaga?branch=main "Codecov"
 
@@ -143,4 +170,4 @@ Saga runner will use predefined sagaId and propagate it to all actions and compe
 
 [Badge-GHA]: https://github.com/rmaiun/microsaga/actions/workflows/microsaga.yml/badge.svg "Github actions"
 
-[Badge-SonatypeReleases]: https://img.shields.io/badge/release-1.0.0-blueviolet "Sonatype Releases"
+[Badge-SonatypeReleases]: https://img.shields.io/badge/release-1.1.0-blueviolet "Sonatype Releases"
