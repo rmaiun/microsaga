@@ -9,7 +9,6 @@ public class Evaluation<A> {
   private final EvaluationType evaluationType;
   private final long duration;
   private final boolean success;
-
   private final EvaluationData<A> result;
 
   public Evaluation(String name, EvaluationType evaluationType, long duration, boolean success, A data, String path) {
