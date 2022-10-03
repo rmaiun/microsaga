@@ -21,7 +21,7 @@ More complex example with Spring Boot, persistence layer and re-compensations ca
 # Usage
 
 Add dependency to your project with `gradle`:  
-`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '1.0.0'`  
+`implementation group: 'io.github.rmaiun', name: 'microsaga', version: '1.1.0'`  
 or you can use another build tools.  
 Actual version also could be checked at [mvnrepository.com](https://mvnrepository.com/artifact/io.github.rmaiun/microsaga)
 
